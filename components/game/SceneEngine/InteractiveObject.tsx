@@ -119,11 +119,7 @@ export function InteractiveObject({ config, unlocked, completed, onClick, hoverS
 
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                'linear-gradient(180deg, rgba(255,255,255,0.02), transparent 24%), linear-gradient(90deg, rgba(255,255,255,0.02), transparent 28%)',
-              mixBlendMode: 'screen',
-            }}
+            
           />
         </div>
       </div>
