@@ -97,12 +97,14 @@ export const level1: LevelConfig = {
       id: 'robot',
       type: 'interactive',
       title: 'Robot Cient\u00EDfico',
-      area: { x: 54, y: 37, width: 13, height: 23 },
+      area: { x: 45, y: 28, width: 13, height: 40 },
       unlockAfter: 'rio',
       activityId: 'activity-04',
       visual: {
+        resource: '/assets/level1/robot.png',
         transform: 'perspective(1000px) rotateZ(0.8deg) skewY(-0.2deg)',
         transformOrigin: 'center center',
+        fit: 'cover',
       },
     },
     {
