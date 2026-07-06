@@ -8,6 +8,7 @@ export interface UseGameSaveReturn {
   save: GameSave | null
   hasSave: boolean
   loadSave: () => void
+  saveGame: (data: GameSave) => void
   clearSave: () => void
 }
 
@@ -19,7 +20,7 @@ export function useGameSave(): UseGameSaveReturn {
       const raw = localStorage.getItem(SAVE_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as GameSave
-        if (parsed && typeof parsed.level === 'number') {
+        if (parsed && typeof parsed.currentLevel === 'number' && parsed.playerId) {
           setSave(parsed)
           return
         }
@@ -31,8 +32,21 @@ export function useGameSave(): UseGameSaveReturn {
   }, [])
 
   useEffect(() => {
-    loadSave()
+    // Defer loadSave to avoid calling setState synchronously within an effect
+    const t = setTimeout(() => {
+      loadSave()
+    }, 0)
+    return () => clearTimeout(t)
   }, [loadSave])
+
+  const saveGame = useCallback((data: GameSave) => {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data))
+      setSave(data)
+    } catch {
+      // localStorage unavailable
+    }
+  }, [])
 
   const clearSave = useCallback(() => {
     try {
@@ -47,6 +61,7 @@ export function useGameSave(): UseGameSaveReturn {
     save,
     hasSave: save !== null,
     loadSave,
+    saveGame,
     clearSave,
   }
 }

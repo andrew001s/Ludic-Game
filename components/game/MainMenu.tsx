@@ -10,6 +10,8 @@ import { GameLogo } from '@/components/game/GameLogo'
 import { Footer } from '@/components/game/Footer'
 import { useGameSave } from '@/hooks/useGameSave'
 import { useAudio } from '@/hooks/useAudio'
+import { PlayerNameModal } from '@/components/game/GameModal/PlayerNameModal'
+import { StoryPlayer } from '@/components/game/Story/StoryPlayer'
 import { LeaderboardTable } from '@/components/leaderboard/LeaderboardTable'
 import { LeaderboardSearch } from '@/components/leaderboard/LeaderboardSearch'
 import { LeaderboardPagination } from '@/components/leaderboard/LeaderboardPagination'
@@ -20,7 +22,8 @@ import { useLeaderboard } from '@/hooks/useLeaderboard'
 
 export function MainMenu() {
   const router = useRouter()
-  const { hasSave, save } = useGameSave()
+  const { hasSave, save, saveGame } = useGameSave()
+  const [flow, setFlow] = useState<'menu' | 'name' | 'story'>('menu')
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false)
   const { playSFX, initAudio } = useAudio()
 
@@ -28,17 +31,32 @@ export function MainMenu() {
 
   const handleNewGame = useCallback(() => {
     playSFX('confirm')
-    router.push('/game')
-  }, [router, playSFX])
+    setFlow('name')
+  }, [playSFX])
+
+  const handlePlayerComplete = useCallback(
+    (result: { id: string; playerName: string }) => {
+      saveGame({
+        playerId: result.id,
+        playerName: result.playerName,
+        currentLevel: 1,
+      })
+      setTimeout(() => setFlow('story'), 500)
+    },
+    [saveGame],
+  )
+
+  const handleStoryFinish = useCallback(() => {
+    router.push('/game/level-1')
+  }, [router])
 
   const handleContinue = useCallback(() => {
     if (!hasSave || !save) return
     playSFX('confirm')
-    const params = new URLSearchParams({
-      level: String(save.level),
-      progress: String(save.progress),
-      character: save.character,
-    })
+    const params = new URLSearchParams()
+    params.set('level', String(save.currentLevel))
+    if (save.progress !== undefined) params.set('progress', String(save.progress))
+    if (save.character) params.set('character', save.character)
     router.push(`/game?${params.toString()}`)
   }, [hasSave, save, router, playSFX])
 
@@ -121,6 +139,14 @@ export function MainMenu() {
 
         <Footer />
       </div>
+
+      <PlayerNameModal
+        isOpen={flow === 'name'}
+        onComplete={handlePlayerComplete}
+        onCancel={() => setFlow('menu')}
+      />
+
+      {flow === 'story' && <StoryPlayer onFinish={handleStoryFinish} />}
 
       <Modal
         isOpen={isLeaderboardOpen}

@@ -1,124 +1,129 @@
 'use client'
 
-import { useCallback, useRef, useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 
 type SfxType = 'hover' | 'click' | 'confirm' | 'back'
 
+// Module-level singletons — shared across all hook instances
+let ctx: AudioContext | null = null
+let music: HTMLAudioElement | null = null
+let isPlaying = false
+let instanceCount = 0
+let retryListenerAttached = false
+
+function getCtx(): AudioContext {
+  if (!ctx) {
+    const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    ctx = new Ctor()
+  }
+  return ctx
+}
+
+function playNote(freq: number, duration: number, type: OscillatorType = 'square', volume = 0.06) {
+  try {
+    const c = getCtx()
+    const osc = c.createOscillator()
+    const gain = c.createGain()
+    osc.type = type
+    osc.frequency.value = freq
+    gain.gain.setValueAtTime(volume, c.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration)
+    osc.connect(gain)
+    gain.connect(c.destination)
+    osc.start(c.currentTime)
+    osc.stop(c.currentTime + duration)
+  } catch {
+    // Audio not available
+  }
+}
+
 export function useAudio() {
-  const ctxRef = useRef<AudioContext | null>(null)
-  const musicRef = useRef<HTMLAudioElement | null>(null)
-  const isPlayingRef = useRef(false)
-
-  const getCtx = useCallback(() => {
-    if (!ctxRef.current) {
-      const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-      ctxRef.current = new Ctor()
-    }
-    return ctxRef.current
-  }, [])
-
-  const playNote = useCallback(
-    (freq: number, duration: number, type: OscillatorType = 'square', volume = 0.06) => {
-      try {
-        const ctx = getCtx()
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
-        osc.type = type
-        osc.frequency.value = freq
-        gain.gain.setValueAtTime(volume, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
-        osc.connect(gain)
-        gain.connect(ctx.destination)
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + duration)
-      } catch {
-        // Audio not available
-      }
-    },
-    [getCtx],
-  )
-
-  const playSFX = useCallback(
-    (type: SfxType) => {
-      try {
-        const ctx = getCtx()
-        if (ctx.state === 'suspended') ctx.resume()
-
-        switch (type) {
-          case 'hover':
-            playNote(880, 0.04, 'square', 0.02)
-            break
-          case 'click':
-            playNote(660, 0.06, 'square', 0.05)
-            setTimeout(() => playNote(990, 0.08, 'square', 0.05), 60)
-            break
-          case 'confirm':
-            playNote(523, 0.1, 'square', 0.06)
-            setTimeout(() => playNote(659, 0.1, 'square', 0.06), 100)
-            setTimeout(() => playNote(784, 0.2, 'square', 0.06), 200)
-            break
-          case 'back':
-            playNote(440, 0.06, 'square', 0.04)
-            setTimeout(() => playNote(330, 0.1, 'square', 0.04), 60)
-            break
-        }
-      } catch {
-        // Audio not available
-      }
-    },
-    [getCtx, playNote],
-  )
-
   const startMusic = useCallback(() => {
-    if (isPlayingRef.current) return
-    isPlayingRef.current = true
+    if (isPlaying) return
+    isPlaying = true
 
-    if (!musicRef.current) {
-      musicRef.current = new Audio('/music/start.mp3')
-      musicRef.current.loop = true
-      musicRef.current.volume = 0.4
+    if (!music) {
+      music = new Audio('/music/start.mp3')
+      music.loop = true
+      music.volume = 0.4
     }
 
-    musicRef.current.currentTime = 0
-    musicRef.current.play().catch(() => {
-      isPlayingRef.current = false
+    music.currentTime = 0
+    music.play().catch(() => {
+      isPlaying = false
     })
   }, [])
 
   const stopMusic = useCallback(() => {
-    isPlayingRef.current = false
-    if (musicRef.current) {
-      musicRef.current.pause()
-      musicRef.current.currentTime = 0
+    isPlaying = false
+    if (music) {
+      music.pause()
+      music.currentTime = 0
+    }
+  }, [])
+
+  const playSFX = useCallback((type: SfxType) => {
+    try {
+      const c = getCtx()
+      if (c.state === 'suspended') c.resume()
+
+      switch (type) {
+        case 'hover':
+          playNote(880, 0.04, 'square', 0.02)
+          break
+        case 'click':
+          playNote(660, 0.06, 'square', 0.05)
+          setTimeout(() => playNote(990, 0.08, 'square', 0.05), 60)
+          break
+        case 'confirm':
+          playNote(523, 0.1, 'square', 0.06)
+          setTimeout(() => playNote(659, 0.1, 'square', 0.06), 100)
+          setTimeout(() => playNote(784, 0.2, 'square', 0.06), 200)
+          break
+        case 'back':
+          playNote(440, 0.06, 'square', 0.04)
+          setTimeout(() => playNote(330, 0.1, 'square', 0.04), 60)
+          break
+      }
+    } catch {
+      // Audio not available
     }
   }, [])
 
   const initAudio = useCallback(async () => {
     try {
-      const ctx = getCtx()
-      if (ctx.state === 'suspended') await ctx.resume()
+      const c = getCtx()
+      if (c.state === 'suspended') await c.resume()
     } catch {
       // AudioContext not available
     }
     startMusic()
-  }, [getCtx, startMusic])
+  }, [startMusic])
 
-  // Try to play immediately
-  // Fallback: some browsers need a user gesture to play audio
+  // Reference counting — only the first mount initializes, only the last unmount stops
   useEffect(() => {
-    initAudio()
+    instanceCount++
 
-    const retry = () => {
-      const ctx = ctxRef.current
-      if (ctx?.state === 'suspended') ctx.resume()
-      startMusic()
+    if (instanceCount === 1) {
+      initAudio()
+
+      if (!retryListenerAttached) {
+        retryListenerAttached = true
+        const retry = () => {
+          if (ctx?.state === 'suspended') ctx.resume()
+          startMusic()
+        }
+        window.addEventListener('click', retry, { once: true })
+        window.addEventListener('keydown', retry, { once: true })
+      }
     }
-    window.addEventListener('click', retry, { once: true })
-    window.addEventListener('keydown', retry, { once: true })
+
     return () => {
-      window.removeEventListener('click', retry)
-      window.removeEventListener('keydown', retry)
-      stopMusic()
+      instanceCount--
+      if (instanceCount <= 0) {
+        instanceCount = 0
+        stopMusic()
+      }
     }
   }, [initAudio, startMusic, stopMusic])
 
