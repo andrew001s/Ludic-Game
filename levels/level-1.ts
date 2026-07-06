@@ -52,7 +52,7 @@ export const level1: LevelConfig = {
       unlockAfter: null,
       activityId: 'activity-01',
       visual: {
-        resource: '/backgrounds/board.png',
+        resource: '/assets/level1/board.png',
         transform: 'perspective(1400px) rotateY(30deg) rotateX(0deg) rotateZ(2deg) skewY(-1.5deg)',
         transformOrigin: 'center center',
         fit: 'cover',
