@@ -33,20 +33,24 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
 
   useEffect(() => {
     if (isOpen) {
-      setShowContent(true)
+      const t0 = setTimeout(() => setShowContent(true), 0)
       const t1 = setTimeout(() => setShowInput(true), 2200)
       const t2 = setTimeout(() => inputRef.current?.focus(), 2400)
       return () => {
+        clearTimeout(t0)
         clearTimeout(t1)
         clearTimeout(t2)
       }
     } else {
-      setShowContent(false)
-      setShowInput(false)
-      setName('')
-      setError(null)
-      setSubmitting(false)
-      setFadeToBlack(false)
+      const t0 = setTimeout(() => {
+        setShowContent(false)
+        setShowInput(false)
+        setName('')
+        setError(null)
+        setSubmitting(false)
+        setFadeToBlack(false)
+      }, 0)
+      return () => clearTimeout(t0)
     }
   }, [isOpen])
 
@@ -96,7 +100,7 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <motion.div
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-[#030402]/92"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -105,7 +109,7 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
           />
 
           <motion.div
-            className="relative w-full max-w-lg"
+            className="relative w-full max-w-180 px-4 sm:px-0"
             initial={{ opacity: 0, scale: 0.85 }}
             animate={
               fadeToBlack
@@ -117,43 +121,64 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
             style={{ imageRendering: 'pixelated' }}
           >
             <div
-              className="relative overflow-hidden border-2"
+              className="relative overflow-hidden border-[3px] border-[#5a5c31] bg-[#10130e] shadow-[0_24px_80px_rgba(0,0,0,0.85)]"
               style={{
-                borderColor: 'rgba(74, 222, 128, 0.3)',
-                boxShadow: '0 0 30px rgba(74, 222, 128, 0.08), inset 0 0 30px rgba(74, 222, 128, 0.03)',
-                backgroundColor: 'rgba(5, 8, 5, 0.95)',
+                backgroundImage:
+                  'radial-gradient(circle at top left, rgba(168, 204, 92, 0.08), transparent 28%), radial-gradient(circle at bottom right, rgba(99, 102, 48, 0.2), transparent 32%), repeating-linear-gradient(0deg, rgba(255,255,255,0.014) 0 2px, transparent 2px 6px), repeating-linear-gradient(90deg, rgba(255,255,255,0.01) 0 2px, transparent 2px 6px)',
+                boxShadow:
+                  'inset 0 0 0 1px rgba(203, 226, 120, 0.08), inset 0 0 36px rgba(0,0,0,0.55), 0 24px 80px rgba(0,0,0,0.85)',
               }}
             >
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   backgroundImage:
-                    'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(74, 222, 128, 0.015) 2px, rgba(74, 222, 128, 0.015) 4px)',
+                    'linear-gradient(180deg, rgba(255,255,255,0.03), transparent 32%), linear-gradient(90deg, rgba(255,255,255,0.03), transparent 30%)',
                 }}
               />
 
-              <div className="relative p-8 sm:p-10">
+              <div
+                className="absolute inset-x-0 top-0 h-4 pointer-events-none"
+                style={{ background: 'linear-gradient(90deg, rgba(168,204,92,0.16), transparent 25%, transparent 75%, rgba(168,204,92,0.16))' }}
+              />
+
+              <div
+                className="absolute inset-y-0 left-0 w-4 pointer-events-none"
+                style={{ background: 'linear-gradient(180deg, rgba(168,204,92,0.12), transparent 30%, transparent 70%, rgba(168,204,92,0.12))' }}
+              />
+
+              <button
+                type="button"
+                onClick={onCancel}
+                className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center border-[3px] border-[#5a5c31] bg-[#11140f] text-[#a8cc5c] transition-colors hover:bg-[#191d15] hover:text-[#d7e79a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7e79a]"
+                aria-label="Cerrar modal"
+                style={{ fontFamily: '"Courier New", monospace', textShadow: '1px 1px 0 #050603' }}
+              >
+                X
+              </button>
+
+              <div className="relative p-6 sm:p-10 pt-14 sm:pt-12">
                 <AnimatePresence>
                   {showContent && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.8 }}
+                      style={{ fontFamily: '"Courier New", monospace', imageRendering: 'pixelated' }}
                     >
-                      <div className="flex items-center gap-2 mb-6">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
+                      <div className="mx-auto mb-5 flex w-fit items-center justify-center border-[3px] border-[#616440] bg-[#141812] px-6 py-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03)]">
                         <span
-                          className="text-xs tracking-[0.25em] uppercase"
-                          style={{ color: 'rgba(74, 222, 128, 0.5)', fontFamily: '"Courier New", monospace' }}
+                          className="text-[13px] sm:text-sm font-bold tracking-[0.22em] uppercase text-[#dfe9ae]"
+                          style={{ textShadow: '2px 2px 0 #060705' }}
                         >
-                          SISTEMA DE REGISTRO v.2.1.8
+                          Nuevo Juego
                         </span>
                       </div>
 
-                      <div className="space-y-5" style={{ fontFamily: '"Courier New", monospace' }}>
+                      <div className="space-y-4 text-center">
                         <motion.p
-                          className="text-base sm:text-lg leading-relaxed"
-                          style={{ color: '#86efac' }}
+                          className="text-[18px] sm:text-[21px] leading-tight uppercase font-bold"
+                          style={{ color: '#b9d86d', textShadow: '2px 2px 0 #050603' }}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.8, delay: 0.3 }}
@@ -162,8 +187,8 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
                         </motion.p>
 
                         <motion.p
-                          className="text-sm leading-relaxed"
-                          style={{ color: 'rgba(134, 239, 172, 0.7)' }}
+                          className="text-[15px] sm:text-[16px] leading-relaxed uppercase"
+                          style={{ color: '#d2d2c8', textShadow: '1px 1px 0 #050603' }}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ duration: 0.8, delay: 0.8 }}
@@ -172,8 +197,8 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
                         </motion.p>
 
                         <motion.p
-                          className="text-sm leading-relaxed"
-                          style={{ color: 'rgba(134, 239, 172, 0.6)' }}
+                          className="text-[15px] sm:text-[16px] leading-relaxed uppercase"
+                          style={{ color: '#b9d86d', textShadow: '1px 1px 0 #050603' }}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ duration: 0.8, delay: 1.3 }}
@@ -192,18 +217,19 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
                           >
                             <div className="relative">
                               <div
-                                className="flex items-center gap-2 px-4 py-3 border"
+                                className="flex items-center gap-2 px-4 py-3 border-[3px] bg-[#0d100b]"
                                 style={{
-                                  borderColor: error ? 'rgba(239, 68, 68, 0.5)' : 'rgba(74, 222, 128, 0.2)',
-                                  backgroundColor: 'rgba(74, 222, 128, 0.03)',
+                                  borderColor: error ? 'rgba(220, 120, 102, 0.8)' : 'rgba(183, 209, 103, 0.55)',
                                   boxShadow: error
-                                    ? '0 0 10px rgba(239, 68, 68, 0.1)'
-                                    : 'inset 0 0 15px rgba(74, 222, 128, 0.03)',
+                                    ? 'inset 0 0 0 1px rgba(220, 120, 102, 0.12), 0 0 0 1px rgba(0,0,0,0.25)'
+                                    : 'inset 0 0 0 1px rgba(183, 209, 103, 0.08), 0 0 0 1px rgba(0,0,0,0.25)',
+                                  backgroundImage:
+                                    'repeating-linear-gradient(90deg, rgba(255,255,255,0.018) 0 2px, transparent 2px 6px)',
                                 }}
                               >
                                 <span
-                                  className="text-sm select-none"
-                                  style={{ color: 'rgba(74, 222, 128, 0.4)' }}
+                                  className="text-base select-none"
+                                  style={{ color: '#9cb55d', textShadow: '1px 1px 0 #050603' }}
                                 >
                                   &gt;
                                 </span>
@@ -216,12 +242,12 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
                                   placeholder="Escribe tu nombre..."
                                   maxLength={20}
                                   disabled={submitting}
-                                  className="w-full bg-transparent text-sm outline-none placeholder:opacity-30"
+                                  className="w-full bg-transparent text-[16px] sm:text-[17px] uppercase outline-none placeholder:opacity-30"
                                   style={{
-                                    color: '#4ade80',
+                                    color: '#dfe9ae',
                                     fontFamily: '"Courier New", monospace',
-                                    caretColor: '#4ade80',
-                                    textShadow: '0 0 8px rgba(74, 222, 128, 0.3)',
+                                    caretColor: '#dfe9ae',
+                                    textShadow: '1px 1px 0 #050603',
                                   }}
                                   autoComplete="off"
                                   spellCheck={false}
@@ -230,8 +256,8 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
 
                               {error && (
                                 <motion.p
-                                  className="text-xs mt-2"
-                                  style={{ color: 'rgba(239, 68, 68, 0.8)', fontFamily: '"Courier New", monospace' }}
+                                  className="text-xs mt-2 uppercase tracking-[0.18em]"
+                                  style={{ color: '#e19483', fontFamily: '"Courier New", monospace', textShadow: '1px 1px 0 #050603' }}
                                   initial={{ opacity: 0, y: -5 }}
                                   animate={{ opacity: 1, y: 0 }}
                                 >
@@ -243,20 +269,16 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
                             <motion.button
                               onClick={handleSubmit}
                               disabled={submitting}
-                              className="w-full py-3 text-sm font-bold tracking-widest uppercase border transition-all duration-150 disabled:opacity-40"
+                              className="w-full py-4 text-sm font-bold tracking-[0.2em] uppercase border-[3px] transition-all duration-150 disabled:opacity-45"
                               style={{
-                                color: submitting ? 'rgba(74, 222, 128, 0.4)' : '#4ade80',
-                                borderColor: submitting
-                                  ? 'rgba(74, 222, 128, 0.15)'
-                                  : 'rgba(74, 222, 128, 0.3)',
-                                backgroundColor: submitting
-                                  ? 'rgba(74, 222, 128, 0.03)'
-                                  : 'rgba(74, 222, 128, 0.05)',
+                                color: submitting ? '#9ea77b' : '#e4efbf',
+                                borderColor: submitting ? 'rgba(109, 113, 73, 0.9)' : 'rgba(118, 123, 76, 0.95)',
+                                backgroundColor: submitting ? '#10130e' : '#1a1f15',
                                 fontFamily: '"Courier New", monospace',
-                                textShadow: submitting ? 'none' : '0 0 10px rgba(74, 222, 128, 0.2)',
+                                textShadow: '1px 1px 0 #050603',
                                 boxShadow: submitting
-                                  ? 'none'
-                                  : '0 0 15px rgba(74, 222, 128, 0.05), inset 0 0 15px rgba(74, 222, 128, 0.03)',
+                                  ? 'inset 0 0 0 1px rgba(255,255,255,0.03)'
+                                  : 'inset 0 0 0 1px rgba(255,255,255,0.05), 0 10px 0 rgba(0,0,0,0.18)',
                               }}
                               whileHover={submitting ? {} : { scale: 1.01 }}
                               whileTap={submitting ? {} : { scale: 0.99 }}
@@ -266,8 +288,8 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
                                   <span
                                     className="inline-block w-4 h-4 border-2 rounded-full animate-spin"
                                     style={{
-                                      borderColor: 'rgba(74, 222, 128, 0.2)',
-                                      borderTopColor: '#4ade80',
+                                      borderColor: 'rgba(223, 233, 174, 0.22)',
+                                      borderTopColor: '#dfe9ae',
                                     }}
                                   />
                                   REGISTRANDO...
@@ -278,8 +300,8 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
                             </motion.button>
 
                             <p
-                              className="text-[10px] text-center tracking-wider"
-                              style={{ color: 'rgba(74, 222, 128, 0.2)', fontFamily: '"Courier New", monospace' }}
+                              className="text-[10px] text-center tracking-[0.22em] uppercase"
+                              style={{ color: 'rgba(223, 233, 174, 0.35)', fontFamily: '"Courier New", monospace', textShadow: '1px 1px 0 #050603' }}
                             >
                               3-20 CARACTERES | ENTER PARA CONFIRMAR
                             </p>
@@ -294,7 +316,7 @@ export function PlayerNameModal({ isOpen, onComplete, onCancel }: PlayerNameModa
               <div
                 className="absolute bottom-0 left-0 right-0 h-px"
                 style={{
-                  background: 'linear-gradient(90deg, transparent, rgba(74, 222, 128, 0.15), transparent)',
+                  background: 'linear-gradient(90deg, transparent, rgba(183, 209, 103, 0.28), transparent)',
                 }}
               />
             </div>
