@@ -26,18 +26,17 @@ interface InteractiveObjectProps {
 }
 
 export function InteractiveObject({ config, unlocked, completed, lockedBy, onClick, hoverStyle }: InteractiveObjectProps) {
-  if (completed) return null
-
   const visual = config.visual
   const hasResource = Boolean(visual?.resource)
+  const interactive = unlocked && !completed
 
   const hover = { ...defaultInteractiveHover, ...hoverStyle }
 
   return (
     <motion.button
-      onClick={unlocked ? onClick : undefined}
-      disabled={!unlocked}
-      className={`absolute cursor-pointer transition-all duration-300 ${hasResource ? 'border-0 bg-transparent' : 'border-2'}`}
+      onClick={interactive ? onClick : undefined}
+      disabled={!interactive}
+      className={`absolute transition-all duration-300 ${interactive ? 'cursor-pointer' : 'cursor-default'} ${hasResource ? 'border-0 bg-transparent' : 'border-2'}`}
       style={{
         left: `${config.area.x}%`,
         top: `${config.area.y}%`,
@@ -45,28 +44,34 @@ export function InteractiveObject({ config, unlocked, completed, lockedBy, onCli
         height: `${config.area.height}%`,
         borderColor: hasResource
           ? 'transparent'
-          : unlocked
+          : completed
+            ? 'rgba(183, 209, 103, 0.28)'
+            : unlocked
             ? 'rgba(74, 222, 128, 0.3)'
             : 'rgba(74, 222, 128, 0.06)',
         backgroundColor: hasResource
           ? 'transparent'
-          : unlocked
+          : completed
+            ? 'rgba(183, 209, 103, 0.08)'
+            : unlocked
             ? 'rgba(74, 222, 128, 0.04)'
             : 'rgba(0, 0, 0, 0.3)',
         boxShadow: hasResource
           ? 'none'
-          : unlocked
+          : completed
+            ? '0 0 18px rgba(183, 209, 103, 0.1), inset 0 0 16px rgba(183, 209, 103, 0.05)'
+            : unlocked
             ? '0 0 15px rgba(74, 222, 128, 0.08), inset 0 0 15px rgba(74, 222, 128, 0.03)'
             : 'none',
         overflow: 'visible',
       }}
       initial={{ opacity: 0 }}
       animate={{
-        opacity: unlocked ? 1 : 0.3,
+        opacity: completed ? 0.82 : unlocked ? 1 : 0.55,
         scale: unlocked ? 1 : 0.95,
       }}
       whileHover={
-        unlocked
+        interactive
           ? {
               borderColor: hasResource ? 'transparent' : hover.borderColor,
               boxShadow: hasResource ? 'none' : hover.boxShadow,
@@ -74,7 +79,7 @@ export function InteractiveObject({ config, unlocked, completed, lockedBy, onCli
             }
           : {}
       }
-      whileTap={unlocked ? { scale: 0.97 } : {}}
+      whileTap={interactive ? { scale: 0.97 } : {}}
     >
       <div className="relative h-full w-full overflow-visible">
         <div
@@ -97,7 +102,11 @@ export function InteractiveObject({ config, unlocked, completed, lockedBy, onCli
               style={{
                 objectFit: visual?.fit ?? 'contain',
                 opacity: visual?.opacity ?? 1,
-                filter: unlocked ? 'saturate(0.92) contrast(1.05) brightness(0.96)' : 'saturate(0.75) contrast(0.95) brightness(0.55)',
+                filter: completed
+                  ? 'saturate(0.8) contrast(1.02) brightness(0.82)'
+                  : unlocked
+                    ? 'saturate(0.92) contrast(1.05) brightness(0.96)'
+                    : 'saturate(0.75) contrast(0.95) brightness(0.65)',
               }}
             />
           ) : (
@@ -110,7 +119,7 @@ export function InteractiveObject({ config, unlocked, completed, lockedBy, onCli
                 style={{
                   background:
                     'linear-gradient(180deg, rgba(255,255,255,0.02), transparent 22%), repeating-linear-gradient(90deg, rgba(183, 209, 103, 0.035) 0 1px, transparent 1px 8px)',
-                  opacity: unlocked ? 1 : 0.5,
+                  opacity: completed ? 0.85 : unlocked ? 1 : 0.5,
                 }}
               />
             </div>

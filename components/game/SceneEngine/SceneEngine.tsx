@@ -1,8 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import type { LevelConfig } from '@/types/level'
 import { useSceneEngine } from '@/hooks/useSceneEngine'
 import { useAudio } from '@/hooks/useAudio'
@@ -18,7 +17,6 @@ interface SceneEngineProps {
 }
 
 export function SceneEngine({ levelConfig, onLevelComplete }: SceneEngineProps) {
-  const router = useRouter()
   const { playSFX } = useAudio()
   const { state, actions, helpers } = useSceneEngine(levelConfig)
 
@@ -47,20 +45,18 @@ export function SceneEngine({ levelConfig, onLevelComplete }: SceneEngineProps) 
       <LevelBackground levelId={levelConfig.id} />
 
       {/* Interactive objects */}
-      {state.phase === 'exploration' && (
-        <div className="absolute inset-0">
-          {levelConfig.interactiveObjects.map((obj) => (
-            <InteractiveObject
-              key={obj.id}
-              config={obj}
-              unlocked={helpers.isUnlocked(obj)}
-              completed={state.completedObjects.has(obj.id)}
-              lockedBy={helpers.findLockedByTitle(obj)}
-              onClick={() => handleObjectClick({ id: obj.id })}
-            />
-          ))}
-        </div>
-      )}
+      <div className="absolute inset-0">
+        {levelConfig.interactiveObjects.map((obj) => (
+          <InteractiveObject
+            key={obj.id}
+            config={obj}
+            unlocked={state.phase === 'exploration' && helpers.isUnlocked(obj)}
+            completed={state.completedObjects.has(obj.id)}
+            lockedBy={helpers.findLockedByTitle(obj)}
+            onClick={() => handleObjectClick({ id: obj.id })}
+          />
+        ))}
+      </div>
 
       {/* Top bar with level info */}
       <div className="absolute top-0 left-0 right-0 z-30 p-3 sm:p-4">
