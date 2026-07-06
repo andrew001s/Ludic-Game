@@ -71,25 +71,27 @@ export function DialogueBox({ lines, onComplete }: DialogueBoxProps) {
       style={{ fontFamily: '"Courier New", monospace' }}
     >
       <div
-        className="max-w-3xl mx-auto p-4 sm:p-5 border cursor-pointer transition-all duration-150 hover:opacity-90"
+        className="max-w-3xl mx-auto p-4 sm:p-5 border-[3px] cursor-pointer transition-all duration-150 hover:opacity-95"
         style={{
-          borderColor: 'rgba(74, 222, 128, 0.2)',
-          backgroundColor: 'rgba(5, 8, 5, 0.92)',
-          boxShadow: '0 -4px 30px rgba(0, 0, 0, 0.5)',
+          borderColor: 'rgba(145, 149, 88, 0.55)',
+          backgroundColor: 'rgba(11, 13, 10, 0.96)',
+          boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255,255,255,0.03)',
+          backgroundImage:
+            'repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 6px), repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0 2px, transparent 2px 6px)',
         }}
         onClick={handleAdvance}
       >
         <div className="flex items-center gap-2 mb-2">
           <span
             className="text-xs font-bold tracking-widest uppercase"
-            style={{ color: line.speaker === 'SISTEMA' ? 'rgba(74, 222, 128, 0.5)' : '#4ade80' }}
+            style={{ color: line.speaker === 'SISTEMA' ? 'rgba(236, 214, 151, 0.65)' : '#d8e28f' }}
           >
             {line.speaker}
           </span>
-          <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(74, 222, 128, 0.15), transparent)' }} />
+          <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(183, 209, 103, 0.22), transparent)' }} />
         </div>
 
-        <p className="text-sm sm:text-base leading-relaxed min-h-[2em]" style={{ color: '#86efac' }}>
+        <p className="text-sm sm:text-base leading-relaxed min-h-[2em]" style={{ color: '#dfe9ae' }}>
           <TypewriterDialogue
             key={`${currentLine}-${line.text}`}
             text={line.text}
@@ -99,7 +101,7 @@ export function DialogueBox({ lines, onComplete }: DialogueBoxProps) {
         </p>
 
         {lineComplete && (
-          <div className="mt-2 text-[10px] tracking-wider text-right animate-pulse" style={{ color: 'rgba(74, 222, 128, 0.2)' }}>
+          <div className="mt-2 text-[10px] tracking-wider text-right animate-pulse" style={{ color: 'rgba(223, 233, 174, 0.45)' }}>
             {isLastLine ? '[CERRAR]' : '[CONTINUAR]'}
           </div>
         )}

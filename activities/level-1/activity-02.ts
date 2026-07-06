@@ -4,8 +4,8 @@ export const activity02: MultipleChoiceActivity = {
   id: 'activity-02',
   type: 'multiple-choice',
   title: 'Molino Experimental',
-  instruction: 'Compara los objetos y selecciona cu\u00E1l posee mayor energ\u00EDa cin\u00E9tica.',
-  question: '\u00BFCu\u00E1l de los siguientes objetos posee mayor energ\u00EDa cin\u00E9tica?',
+  instruction: 'Compara velocidad y movimiento: elige qu\u00E9 objeto producir\u00EDa m\u00E1s energ\u00EDa cin\u00E9tica.',
+  question: '\u00BFQu\u00E9 objeto tiene mayor energ\u00EDa cin\u00E9tica en esta escena?',
   options: [
     'Una bicicleta lenta.',
     'Un autom\u00F3vil r\u00E1pido.',
@@ -15,6 +15,6 @@ export const activity02: MultipleChoiceActivity = {
   correctIndex: 1,
   feedback: {
     success: 'Correcto.\n\nLa energ\u00EDa cin\u00E9tica aumenta cuando existe mayor velocidad y masa.\n\nEl molino comienza a girar.',
-    error: 'Incorrecto.\n\nRecuerda que a mayor velocidad y masa, mayor energ\u00EDa cin\u00E9tica.',
+    error: 'Incorrecto.\n\nBusca el objeto que se mueve m\u00E1s r\u00E1pido: a mayor velocidad y masa, mayor energ\u00EDa cin\u00E9tica.',
   },
 }

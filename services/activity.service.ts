@@ -1,13 +1,13 @@
 import type { ActivityConfig } from '@/types/activity'
-import { activity01 } from '@/activities/activity-01'
-import { activity02 } from '@/activities/activity-02'
-import { activity03 } from '@/activities/activity-03'
-import { activity04 } from '@/activities/activity-04'
-import { activity05 } from '@/activities/activity-05'
-import { activity06 } from '@/activities/activity-06'
-import { activity07 } from '@/activities/activity-07'
-import { activity08 } from '@/activities/activity-08'
-import { activity09 } from '@/activities/activity-09'
+import { activity01 } from '@/activities/level-1/activity-01'
+import { activity02 } from '@/activities/level-1/activity-02'
+import { activity03 } from '@/activities/level-1/activity-03'
+import { activity04 } from '@/activities/level-1/activity-04'
+import { activity05 } from '@/activities/level-1/activity-05'
+import { activity06 } from '@/activities/level-1/activity-06'
+import { activity07 } from '@/activities/level-5/activity-07'
+import { activity08 } from '@/activities/level-1/activity-08'
+import { activity09 } from '@/activities/level-5/activity-09'
 
 const activities: Record<string, ActivityConfig> = {
   'activity-01': activity01,

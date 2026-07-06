@@ -67,13 +67,13 @@ export function SceneEngine({ levelConfig, onLevelComplete }: SceneEngineProps) 
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <span
             className="text-[10px] tracking-[0.25em] uppercase"
-            style={{ color: 'rgba(74, 222, 128, 0.3)', fontFamily: '"Courier New", monospace' }}
+            style={{ color: 'rgba(223, 233, 174, 0.55)', fontFamily: '"Courier New", monospace', textShadow: '1px 1px 0 #050603' }}
           >
             {levelConfig.id.replace('-', ' ').toUpperCase()}
           </span>
           <span
             className="text-[10px] tracking-widest uppercase"
-            style={{ color: 'rgba(74, 222, 128, 0.2)', fontFamily: '"Courier New", monospace' }}
+            style={{ color: 'rgba(183, 209, 103, 0.45)', fontFamily: '"Courier New", monospace', textShadow: '1px 1px 0 #050603' }}
           >
             {levelConfig.title}
           </span>

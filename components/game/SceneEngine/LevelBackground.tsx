@@ -26,18 +26,18 @@ function generateScene(levelId: string): SceneConfig {
   switch (levelId) {
     case 'level-1':
       return {
-        baseGradient: 'linear-gradient(160deg, #050805 0%, #0a1a0a 30%, #071207 60%, #0d1f0d 100%)',
-        accentColor: 'rgba(74, 222, 128, 0.08)',
+        baseGradient: 'linear-gradient(160deg, #040605 0%, #10140f 28%, #171812 58%, #0a0f0b 100%)',
+        accentColor: 'rgba(183, 209, 103, 0.08)',
         elements: [
-          { type: 'rect', x: 5, y: 15, width: 20, height: 35, color: 'rgba(74, 222, 128, 0.04)', opacity: 0.5, glow: '0 0 30px rgba(74, 222, 128, 0.02)' },
-          { type: 'rect', x: 45, y: 10, width: 15, height: 28, color: 'rgba(74, 222, 128, 0.03)', opacity: 0.4 },
-          { type: 'rect', x: 30, y: 55, width: 25, height: 12, color: 'rgba(74, 222, 128, 0.04)', opacity: 0.3 },
-          { type: 'rect', x: 72, y: 20, width: 18, height: 40, color: 'rgba(74, 222, 128, 0.03)', opacity: 0.4 },
-          { type: 'circle', x: 15, y: 30, size: 8, color: 'rgba(74, 222, 128, 0.06)', opacity: 0.6, pulse: true },
-          { type: 'circle', x: 55, y: 25, size: 6, color: 'rgba(74, 222, 128, 0.05)', opacity: 0.5, pulse: true },
-          { type: 'line', x: 0, y: 50, width: 100, height: 1, color: 'rgba(74, 222, 128, 0.04)', opacity: 0.3 },
-          { type: 'line', x: 0, y: 70, width: 100, height: 1, color: 'rgba(74, 222, 128, 0.03)', opacity: 0.2 },
-          { type: 'grid', x: 0, y: 0, width: 100, height: 100, color: 'rgba(74, 222, 128, 0.015)', opacity: 0.3 },
+          { type: 'rect', x: 5, y: 15, width: 20, height: 35, color: 'rgba(129, 153, 74, 0.05)', opacity: 0.5, glow: '0 0 30px rgba(129, 153, 74, 0.02)' },
+          { type: 'rect', x: 45, y: 10, width: 15, height: 28, color: 'rgba(111, 121, 68, 0.04)', opacity: 0.4 },
+          { type: 'rect', x: 30, y: 55, width: 25, height: 12, color: 'rgba(108, 130, 67, 0.04)', opacity: 0.3 },
+          { type: 'rect', x: 72, y: 20, width: 18, height: 40, color: 'rgba(101, 114, 63, 0.04)', opacity: 0.4 },
+          { type: 'circle', x: 15, y: 30, size: 8, color: 'rgba(183, 209, 103, 0.06)', opacity: 0.6, pulse: true },
+          { type: 'circle', x: 55, y: 25, size: 6, color: 'rgba(207, 181, 114, 0.06)', opacity: 0.5, pulse: true },
+          { type: 'line', x: 0, y: 50, width: 100, height: 1, color: 'rgba(183, 209, 103, 0.05)', opacity: 0.35 },
+          { type: 'line', x: 0, y: 70, width: 100, height: 1, color: 'rgba(183, 209, 103, 0.035)', opacity: 0.25 },
+          { type: 'grid', x: 0, y: 0, width: 100, height: 100, color: 'rgba(183, 209, 103, 0.012)', opacity: 0.28 },
         ],
       }
     case 'level-2':
