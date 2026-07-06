@@ -1,20 +1,20 @@
-import type { MultipleChoiceActivity } from '@/types/activity'
+import type { FillBlanksActivity } from '@/types/activity'
 
-export const activity05: MultipleChoiceActivity = {
+export const activity05: FillBlanksActivity = {
   id: 'activity-05',
-  type: 'multiple-choice',
-  title: 'Conservación',
-  instruction: 'Aplica el principio de conservación.',
-  question: 'Según el principio de conservación de la energía, ¿qué sucede con la energía cuando un objeto cae?',
-  options: [
-    'La energía se destruye al impactar',
-    'Se transforma de potencial a cinética',
-    'Desaparece gradualmente',
-    'Se convierte en masa',
+  type: 'fill-blanks',
+  title: 'Terminal de Simulaci\u00F3n',
+  instruction: 'Completa las oraciones con las palabras clave.',
+  text: 'La energ\u00EDa cin\u00E9tica aument\u00F3 porque el ___ y la ___ incrementaron.\n\nLa energ\u00EDa cin\u00E9tica depende del ___ y de la ___.',
+  blanks: [
+    { placeholder: 'movimiento', index: 0 },
+    { placeholder: 'masa', index: 1 },
+    { placeholder: 'movimiento', index: 2 },
+    { placeholder: 'masa', index: 3 },
   ],
-  correctIndex: 1,
+  correctAnswers: ['movimiento', 'masa', 'movimiento', 'masa'],
   feedback: {
-    success: 'Correcto. La energía potencial se transforma en cinética durante la caída.',
-    error: 'Incorrecto. Recuerda que la energía no se destruye, solo se transforma.',
+    success: 'Correcto.\n\nAl aumentar la velocidad (movimiento) y la masa, la energ\u00EDa cin\u00E9tica se incrementa proporcionalmente.\n\nTerminal de simulaci\u00F3n sincronizada.',
+    error: 'Revisa las palabras clave.\n\nPista: la energ\u00EDa cin\u00E9tica depende del movimiento (velocidad) y de la masa.',
   },
 }

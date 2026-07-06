@@ -7,6 +7,7 @@ import type { LevelConfig } from '@/types/level'
 import { useSceneEngine } from '@/hooks/useSceneEngine'
 import { useAudio } from '@/hooks/useAudio'
 import { InteractiveObject } from './InteractiveObject'
+import { LevelBackground } from './LevelBackground'
 import { DialogueBox } from '@/components/game/Dialogue/DialogueBox'
 import { Modal } from '@/components/ui/Modal'
 import { ActivityRenderer } from '@/components/game/Activities/ActivityRegistry'
@@ -43,20 +44,7 @@ export function SceneEngine({ levelConfig, onLevelComplete }: SceneEngineProps) 
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ backgroundColor: '#050805' }}>
       {/* Background */}
-      <div className="absolute inset-0">
-        <img
-          src={levelConfig.background}
-          alt=""
-          className="w-full h-full object-cover pointer-events-none select-none"
-          style={{ imageRendering: 'pixelated', objectPosition: 'center center' }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(180deg, rgba(5, 8, 5, 0.3) 0%, transparent 30%, transparent 70%, rgba(5, 8, 5, 0.6) 100%)',
-          }}
-        />
-      </div>
+      <LevelBackground levelId={levelConfig.id} />
 
       {/* Interactive objects */}
       {state.phase === 'exploration' && (

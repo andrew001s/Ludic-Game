@@ -4,6 +4,8 @@ import type { ActivityConfig, ActivityType } from '@/types/activity'
 import { MultipleChoiceActivity } from './MultipleChoiceActivity'
 import { DragOrderActivity } from './DragOrderActivity'
 import { FillBlanksActivity } from './FillBlanksActivity'
+import { SliderActivity } from './SliderActivity'
+import { BossQuizActivity } from './BossQuizActivity'
 
 interface ActivityRendererProps {
   activity: ActivityConfig
@@ -14,6 +16,8 @@ const registry: Record<ActivityType, React.ComponentType<{ activity: ActivityCon
   'multiple-choice': MultipleChoiceActivity,
   'drag-order': DragOrderActivity,
   'fill-blanks': FillBlanksActivity,
+  'slider': SliderActivity,
+  'boss-quiz': BossQuizActivity,
 }
 
 export function ActivityRenderer({ activity, onComplete }: ActivityRendererProps) {

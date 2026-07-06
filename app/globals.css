@@ -91,3 +91,13 @@ body {
     transform: translateY(-6px);
   }
 }
+
+@keyframes bg-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}

@@ -1,4 +1,4 @@
-export type ActivityType = 'multiple-choice' | 'drag-order' | 'fill-blanks'
+export type ActivityType = 'multiple-choice' | 'drag-order' | 'fill-blanks' | 'slider' | 'boss-quiz'
 
 export interface ActivityFeedback {
   success: string
@@ -38,7 +38,42 @@ export interface FillBlanksActivity {
   feedback: ActivityFeedback
 }
 
+export interface SliderActivity {
+  id: string
+  type: 'slider'
+  title: string
+  instruction: string
+  question: string
+  label: string
+  min: number
+  max: number
+  step: number
+  correctValue: number
+  tolerance: number
+  unit: string
+  feedback: ActivityFeedback
+}
+
+export interface BossQuizQuestion {
+  question: string
+  options: string[]
+  correctIndex: number
+}
+
+export interface BossQuizActivity {
+  id: string
+  type: 'boss-quiz'
+  title: string
+  instruction: string
+  questions: BossQuizQuestion[]
+  timePerQuestion: number
+  passThreshold: number
+  feedback: ActivityFeedback
+}
+
 export type ActivityConfig =
   | MultipleChoiceActivity
   | DragOrderActivity
   | FillBlanksActivity
+  | SliderActivity
+  | BossQuizActivity

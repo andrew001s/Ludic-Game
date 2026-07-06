@@ -1,0 +1,242 @@
+'use client'
+
+import { useState, useCallback, useRef } from 'react'
+import { motion } from 'framer-motion'
+import type { ActivityConfig } from '@/types/activity'
+
+export function SliderActivity({ activity, onComplete }: { activity: ActivityConfig; onComplete: () => void }) {
+  const [value, setValue] = useState<number>(0)
+  const [answered, setAnswered] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const ac = activity as Extract<ActivityConfig, { type: 'slider' }>
+
+  const range = ac.max - ac.min
+  const percent = ((value - ac.min) / range) * 100
+  const isCorrect = Math.abs(value - ac.correctValue) <= ac.tolerance
+
+  const getValueFromClientX = useCallback(
+    (clientX: number) => {
+      const track = trackRef.current
+      if (!track) return value
+      const rect = track.getBoundingClientRect()
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+      const raw = ac.min + ratio * range
+      return Math.round(raw / ac.step) * ac.step
+    },
+    [ac.min, range, ac.step, value],
+  )
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (answered) return
+      e.preventDefault()
+      ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+      setIsDragging(true)
+      setValue(getValueFromClientX(e.clientX))
+    },
+    [answered, getValueFromClientX],
+  )
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isDragging || answered) return
+      setValue(getValueFromClientX(e.clientX))
+    },
+    [isDragging, answered, getValueFromClientX],
+  )
+
+  const handlePointerUp = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  const handleConfirm = useCallback(() => {
+    setAnswered(true)
+  }, [])
+
+  const handleReset = useCallback(() => {
+    setAnswered(false)
+  }, [])
+
+  return (
+    <div
+      className="flex flex-col gap-6"
+      style={{ fontFamily: '"Courier New", monospace' }}
+    >
+      <div className="text-xs tracking-widest uppercase" style={{ color: 'rgba(74, 222, 128, 0.4)' }}>
+        {ac.instruction}
+      </div>
+
+      <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#86efac' }}>
+        {ac.question}
+      </p>
+
+      {/* Value display */}
+      <div className="text-center">
+        <span
+          className="text-2xl font-bold tracking-wider"
+          style={{
+            color: answered ? (isCorrect ? '#4ade80' : 'rgba(239, 68, 68, 0.8)') : '#86efac',
+            textShadow: answered && isCorrect ? '0 0 12px rgba(74, 222, 128, 0.3)' : 'none',
+          }}
+        >
+          {value}
+        </span>
+        <span className="ml-2 text-sm" style={{ color: 'rgba(74, 222, 128, 0.4)' }}>
+          {ac.unit}
+        </span>
+      </div>
+
+      {/* Label */}
+      <div className="text-xs text-center tracking-wider" style={{ color: 'rgba(74, 222, 128, 0.3)' }}>
+        {ac.label}
+      </div>
+
+      {/* Slider track */}
+      <div className="px-2">
+        <div
+          ref={trackRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+          className="relative h-8 cursor-pointer select-none touch-none"
+          style={{ cursor: answered ? 'default' : 'pointer' }}
+        >
+          {/* Track background */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-2 border"
+            style={{
+              borderColor: 'rgba(74, 222, 128, 0.2)',
+              backgroundColor: 'rgba(74, 222, 128, 0.04)',
+            }}
+          />
+          {/* Filled track */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 left-0 h-2 border-y"
+            style={{
+              width: `${percent}%`,
+              borderColor: answered
+                ? isCorrect
+                  ? 'rgba(74, 222, 128, 0.4)'
+                  : 'rgba(239, 68, 68, 0.3)'
+                : 'rgba(74, 222, 128, 0.3)',
+              backgroundColor: answered
+                ? isCorrect
+                  ? 'rgba(74, 222, 128, 0.15)'
+                  : 'rgba(239, 68, 68, 0.08)'
+                : 'rgba(74, 222, 128, 0.08)',
+              transition: isDragging ? 'none' : 'width 0.1s',
+            }}
+          />
+          {/* Thumb */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-7 border"
+            style={{
+              left: `${percent}%`,
+              borderColor: answered
+                ? isCorrect
+                  ? 'rgba(74, 222, 128, 0.6)'
+                  : 'rgba(239, 68, 68, 0.4)'
+                : 'rgba(74, 222, 128, 0.5)',
+              backgroundColor: answered
+                ? isCorrect
+                  ? 'rgba(74, 222, 128, 0.2)'
+                  : 'rgba(239, 68, 68, 0.1)'
+                : 'rgba(74, 222, 128, 0.1)',
+              transition: isDragging ? 'none' : 'left 0.1s',
+              boxShadow: answered && isCorrect
+                ? '0 0 8px rgba(74, 222, 128, 0.2)'
+                : 'none',
+            }}
+          >
+            <div
+              className="absolute inset-0 flex items-center justify-center"
+              style={{ color: answered && isCorrect ? '#4ade80' : 'rgba(74, 222, 128, 0.4)' }}
+            >
+              <div className="w-1 h-3" style={{ backgroundColor: 'currentColor' }} />
+            </div>
+          </div>
+          {/* Min/Max labels */}
+          <div className="absolute -bottom-5 left-0 text-[10px]" style={{ color: 'rgba(74, 222, 128, 0.2)' }}>
+            {ac.min}
+          </div>
+          <div className="absolute -bottom-5 right-0 text-[10px]" style={{ color: 'rgba(74, 222, 128, 0.2)' }}>
+            {ac.max}
+          </div>
+          {/* Target indicator */}
+          {!answered && (
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-0.5 h-10 opacity-30"
+              style={{
+                left: `${((ac.correctValue - ac.min) / range) * 100}%`,
+                backgroundColor: 'rgba(74, 222, 128, 0.3)',
+              }}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      {!answered ? (
+        <motion.button
+          onClick={handleConfirm}
+          className="self-start px-6 py-2 text-xs tracking-widest uppercase border"
+          style={{
+            color: '#4ade80',
+            borderColor: 'rgba(74, 222, 128, 0.3)',
+            fontFamily: '"Courier New", monospace',
+          }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          CONFIRMAR
+        </motion.button>
+      ) : (
+        <>
+          <motion.div
+            className="p-4 border text-sm leading-relaxed"
+            style={{
+              borderColor: isCorrect ? 'rgba(74, 222, 128, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              backgroundColor: isCorrect ? 'rgba(74, 222, 128, 0.05)' : 'rgba(239, 68, 68, 0.05)',
+              color: isCorrect ? '#86efac' : 'rgba(239, 68, 68, 0.7)',
+            }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            {isCorrect ? ac.feedback.success : ac.feedback.error}
+            <div className="flex gap-3 mt-4">
+              {isCorrect ? (
+                <motion.button
+                  onClick={onComplete}
+                  className="px-6 py-2 text-xs tracking-widest uppercase border"
+                  style={{
+                    color: '#4ade80',
+                    borderColor: 'rgba(74, 222, 128, 0.3)',
+                    fontFamily: '"Courier New", monospace',
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  CONTINUAR
+                </motion.button>
+              ) : (
+                <motion.button
+                  onClick={handleReset}
+                  className="px-6 py-2 text-xs tracking-widest uppercase border"
+                  style={{
+                    color: 'rgba(239, 68, 68, 0.7)',
+                    borderColor: 'rgba(239, 68, 68, 0.3)',
+                    fontFamily: '"Courier New", monospace',
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  REINTENTAR
+                </motion.button>
+              )}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </div>
+  )
+}

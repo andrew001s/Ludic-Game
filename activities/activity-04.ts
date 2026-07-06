@@ -1,19 +1,20 @@
-import type { FillBlanksActivity } from '@/types/activity'
+import type { DragOrderActivity } from '@/types/activity'
 
-export const activity04: FillBlanksActivity = {
+export const activity04: DragOrderActivity = {
   id: 'activity-04',
-  type: 'fill-blanks',
-  title: 'Completa el Circuito',
-  instruction: 'Completa las oraciones con las palabras correctas.',
-  text: 'La corriente eléctrica fluye a través de un ___.\n\nEl ___ convierte la energía eléctrica en luz.\n\nEl ___ controla el flujo de corriente.',
-  blanks: [
-    { placeholder: 'conductor', index: 0 },
-    { placeholder: 'foco', index: 1 },
-    { placeholder: 'interruptor', index: 2 },
+  type: 'drag-order',
+  title: 'Robot Cient\u00EDfico',
+  instruction: 'Ordena la secuencia correcta para activar el robot.',
+  question: '\u00BFCu\u00E1l es el orden correcto de la transformaci\u00F3n energ\u00E9tica?',
+  items: [
+    'Movimiento',
+    'Energ\u00EDa Cin\u00E9tica',
+    'Motor',
+    'Robot funcionando',
   ],
-  correctAnswers: ['conductor', 'foco', 'interruptor'],
+  correctOrder: [0, 1, 2, 3],
   feedback: {
-    success: 'Correcto. Has completado correctamente el circuito eléctrico.',
-    error: 'Algunas respuestas no son correctas. Revisa los términos.',
+    success: 'Correcto.\n\nEl movimiento genera energ\u00EDa cin\u00E9tica, que acciona el motor y pone el robot en funcionamiento.\n\nEl robot cobra vida.',
+    error: 'Orden incorrecto.\n\nRecuerda la cadena: el movimiento produce energ\u00EDa cin\u00E9tica que alimenta el motor.',
   },
 }
