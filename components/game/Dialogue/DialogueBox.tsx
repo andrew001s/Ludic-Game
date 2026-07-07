@@ -3,31 +3,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Nametag, TextsPreview } from 'narraleaf-react'
 import type { DialogueLine } from '@/types/level'
-import { getSpeakerProfile } from '@/app/constants/dialogueSpeakers'
+import { getSpeakerImageSrc, getSpeakerProfile } from '@/app/constants/dialogueSpeakers'
 
 interface DialogueBoxProps {
   lines: DialogueLine[]
   onComplete: () => void
-}
-
-function TypewriterDialogue({ text, speed = 25, onComplete }: { text: string; speed?: number; onComplete: () => void }) {
-  const [charCount, setCharCount] = useState(0)
-
-  useEffect(() => {
-    if (charCount >= text.length) {
-      onComplete()
-      return
-    }
-
-    const timer = setTimeout(() => {
-      setCharCount((current) => Math.min(current + 1, text.length))
-    }, speed)
-
-    return () => clearTimeout(timer)
-  }, [charCount, onComplete, speed, text.length])
-
-  return <span>{text.slice(0, charCount)}</span>
 }
 
 export function DialogueBox({ lines, onComplete }: DialogueBoxProps) {
@@ -62,7 +44,7 @@ export function DialogueBox({ lines, onComplete }: DialogueBoxProps) {
   const line = lines[currentLine]
   if (!line) return null
   const speakerProfile = getSpeakerProfile(line.speaker)
-  const spriteSrc = speakerProfile.spriteSrc
+  const spriteSrc = getSpeakerImageSrc(speakerProfile)
 
   return (
     <div
@@ -124,23 +106,26 @@ export function DialogueBox({ lines, onComplete }: DialogueBoxProps) {
         onClick={handleAdvance}
       >
         <div className="flex items-center gap-2 mb-2">
-          <span
+          <Nametag
+            name={speakerProfile.displayName}
             className="text-xs font-bold tracking-widest uppercase"
             style={{ color: line.speaker === 'SISTEMA' ? 'rgba(236, 214, 151, 0.65)' : '#d8e28f' }}
-          >
-            {speakerProfile.displayName}
-          </span>
+          />
           <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(183, 209, 103, 0.22), transparent)' }} />
         </div>
 
-        <p className="text-sm sm:text-base leading-relaxed min-h-[2em]" style={{ color: '#dfe9ae' }}>
-          <TypewriterDialogue
+        <div className="text-sm sm:text-base leading-relaxed min-h-[2em]" style={{ color: '#dfe9ae' }}>
+          <TextsPreview
             key={`${currentLine}-${line.text}`}
             text={line.text}
-            speed={20}
-            onComplete={handleTypewriterComplete}
+            cps={50}
+            loop={false}
+            defaultColor="#dfe9ae"
+            fontFamily='"Courier New", monospace'
+            className="leading-relaxed"
+            onCompleted={handleTypewriterComplete}
           />
-        </p>
+        </div>
 
         {lineComplete && (
           <div className="mt-2 text-[10px] tracking-wider text-right animate-pulse" style={{ color: 'rgba(223, 233, 174, 0.45)' }}>
