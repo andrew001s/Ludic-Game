@@ -27,12 +27,31 @@ const kiraImage = new NarraLeafImage({
 const kiraCharacter = new NarraLeafCharacter('Dr.Kira Newton')
 kiraCharacter.addPortrait(kiraImage)
 
+const atlasImage = new NarraLeafImage({
+  name: 'Dr.Atlas Vega',
+  src: '/assets/sprites/atlas.png',
+  zoom: 1,
+  position: {
+    xalign: 0.5,
+    yalign: 0.5,
+  },
+})
+
+const atlasCharacter = new NarraLeafCharacter('Dr.Atlas Vega')
+atlasCharacter.addPortrait(atlasImage)
+
 export const SPEAKER_PROFILES: Record<string, SpeakerProfile> = {
   KIRA: {
     displayName: 'Dr.Kira Newton',
     spriteAlt: 'Dr.Kira Newton',
     character: kiraCharacter,
     image: kiraImage,
+  },
+  VEGA: {
+    displayName: 'Dr.Atlas Vega',
+    spriteAlt: 'Dr.Atlas Vega',
+    character: atlasCharacter,
+    image: atlasImage,
   },
   SISTEMA: {
     displayName: 'SISTEMA',

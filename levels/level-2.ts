@@ -4,40 +4,40 @@ export const level2: LevelConfig = {
   id: 'level-2',
   title: 'Centro de Investigaci\u00F3n Gravitacional',
   background: '/backgrounds/level2.png',
-  character: 'kira',
+  character: 'vega',
   introduction: [
     {
-      speaker: 'KIRA',
+      speaker: 'VEGA',
       text: 'La gravedad parece invisible...',
     },
     {
-      speaker: 'KIRA',
+      speaker: 'VEGA',
       text: 'pero mantiene unido el universo.',
     },
     {
-      speaker: 'KIRA',
+      speaker: 'VEGA',
       text: 'Sin ella... todo perder\u00EDa el equilibrio.',
     },
     {
-      speaker: 'KIRA',
+      speaker: 'VEGA',
       text: 'Necesitamos restaurar el Centro Gravitacional.',
     },
   ],
   completionDialogue: [
     {
-      speaker: 'KIRA',
+      speaker: 'VEGA',
       text: 'Excelente trabajo.',
     },
     {
-      speaker: 'KIRA',
+      speaker: 'VEGA',
       text: 'Ahora comprendes que un objeto puede almacenar energ\u00EDa gracias a su posici\u00F3n.',
     },
     {
-      speaker: 'KIRA',
+      speaker: 'VEGA',
       text: 'La gravedad no solo atrae los cuerpos... tambi\u00E9n permite transformar la energ\u00EDa de formas sorprendentes.',
     },
     {
-      speaker: 'KIRA',
+      speaker: 'VEGA',
       text: 'La expedici\u00F3n contin\u00FAa.',
     },
   ],
