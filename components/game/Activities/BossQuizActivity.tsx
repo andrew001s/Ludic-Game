@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useReducer } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Timer, Trophy, XCircle, Zap } from 'lucide-react'
 import type { ActivityConfig, BossQuizQuestion } from '@/types/activity'
@@ -18,13 +18,12 @@ function QuestionCard({
   totalQuestions: number
   onAnswer: (correct: boolean) => void
 }) {
-  const [selected, setSelected] = useState<number | null>(null)
-  const [qAnswered, setQAnswered] = useState(false)
   const [timeLeft, setTimeLeft] = useState(timePerQuestion)
   const answeredRef = useRef(false)
+  const id = `Q${questionNum}`
 
   useEffect(() => {
-    if (qAnswered) return
+    if (answeredRef.current) return
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -37,38 +36,30 @@ function QuestionCard({
       })
     }, 1000)
 
-    return () => clearInterval(timer)
-  }, [qAnswered])
+    return () => {
+      clearInterval(timer)
+    }
+  }, [id])
 
-  // Auto-timeout when timer reaches 0
   useEffect(() => {
-    if (timeLeft > 0 || qAnswered) return
+    if (timeLeft > 0) return
     if (answeredRef.current) return
+
     answeredRef.current = true
-    const id = setTimeout(() => onAnswer(false), 0)
-    return () => clearTimeout(id)
-  }, [timeLeft, qAnswered, onAnswer])
+    onAnswer(false)
+  }, [timeLeft, onAnswer, id])
 
   const handleSelect = useCallback(
     (index: number) => {
-      if (qAnswered) return
-      setSelected(index)
+      if (answeredRef.current) {
+        return
+      }
+      const correct = index === question.correctIndex
+      answeredRef.current = true
+      onAnswer(correct)
     },
-    [qAnswered],
+    [question.correctIndex, onAnswer],
   )
-
-  const handleConfirm = useCallback(() => {
-    if (selected === null) return
-    if (qAnswered) return
-    setQAnswered(true)
-    const correct = selected === question.correctIndex
-    const id = setTimeout(() => onAnswer(correct), 0)
-    return () => clearTimeout(id)
-  }, [selected, qAnswered, question.correctIndex, onAnswer])
-
-  const handleAutoNext = useCallback(() => {
-    onAnswer(selected === question.correctIndex)
-  }, [selected, question.correctIndex, onAnswer])
 
   return (
     <>
@@ -79,8 +70,8 @@ function QuestionCard({
         <div
           className="flex items-center gap-1.5 px-2 py-0.5 border text-xs tabular-nums"
           style={{
-            borderColor: timeLeft <= 5 && !qAnswered ? 'rgba(239, 68, 68, 0.4)' : 'rgba(74, 222, 128, 0.2)',
-            color: timeLeft <= 5 && !qAnswered ? 'rgba(239, 68, 68, 0.8)' : 'rgba(74, 222, 128, 0.6)',
+            borderColor: 'rgba(74, 222, 128, 0.2)',
+            color: 'rgba(74, 222, 128, 0.6)',
           }}
         >
           <Timer size={13} aria-hidden="true" />
@@ -94,7 +85,8 @@ function QuestionCard({
             key={index}
             className="h-1.5 rounded-full"
             style={{
-              backgroundColor: index < questionNum ? 'rgba(74, 222, 128, 0.35)' : 'rgba(74, 222, 128, 0.08)',
+              backgroundColor:
+                index < questionNum ? 'rgba(74, 222, 128, 0.35)' : 'rgba(74, 222, 128, 0.08)',
               boxShadow: index === questionNum - 1 ? '0 0 10px rgba(74, 222, 128, 0.24)' : 'none',
             }}
           />
@@ -106,126 +98,69 @@ function QuestionCard({
       </p>
 
       <div className="flex flex-col gap-2">
-        {question.options.map((option, i) => {
-          let borderColor = 'rgba(74, 222, 128, 0.2)'
-          let bgColor = 'rgba(74, 222, 128, 0.03)'
-          let textColor = 'rgba(134, 239, 172, 0.7)'
-          let glow = 'none'
-
-          if (qAnswered) {
-            if (i === question.correctIndex) {
-              borderColor = 'rgba(74, 222, 128, 0.6)'
-              bgColor = 'rgba(74, 222, 128, 0.1)'
-              textColor = '#4ade80'
-              glow = '0 0 10px rgba(74, 222, 128, 0.2)'
-            } else if (i === selected) {
-              borderColor = 'rgba(239, 68, 68, 0.4)'
-              bgColor = 'rgba(239, 68, 68, 0.08)'
-              textColor = 'rgba(239, 68, 68, 0.7)'
-            }
-          } else if (i === selected) {
-            borderColor = 'rgba(74, 222, 128, 0.5)'
-            bgColor = 'rgba(74, 222, 128, 0.08)'
-            textColor = '#4ade80'
-          }
-
-          return (
-            <motion.button
-              key={i}
-              onClick={() => handleSelect(i)}
-              disabled={qAnswered}
-              className="w-full text-left px-4 py-3 text-sm border transition-all duration-150 disabled:cursor-default"
-              style={{ borderColor, backgroundColor: bgColor, color: textColor, boxShadow: glow }}
-              whileHover={qAnswered ? {} : { scale: 1.005 }}
-              whileTap={qAnswered ? {} : { scale: 0.995 }}
-            >
-              <span className="flex items-center gap-3">
-                <span
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full border"
-                  style={{
-                    borderColor,
-                    backgroundColor: i === selected ? 'rgba(74, 222, 128, 0.1)' : 'rgba(0, 0, 0, 0.14)',
-                  }}
-                >
-                  {qAnswered && i === question.correctIndex ? (
-                    <CheckCircle2 size={15} aria-hidden="true" />
-                  ) : qAnswered && i === selected ? (
-                    <XCircle size={15} aria-hidden="true" />
-                  ) : (
-                    <Zap size={14} aria-hidden="true" />
-                  )}
-                </span>
-                <span>{option}</span>
+        {question.options.map((option, i) => (
+          <motion.button
+            key={i}
+            onClick={() => handleSelect(i)}
+            className="w-full text-left px-4 py-3 text-sm border"
+            style={{
+              borderColor: 'rgba(74, 222, 128, 0.2)',
+              backgroundColor: 'rgba(74, 222, 128, 0.03)',
+              color: 'rgba(134, 239, 172, 0.7)',
+            }}
+            whileHover={{ scale: 1.005 }}
+            whileTap={{ scale: 0.995 }}
+          >
+            <span className="flex items-center gap-3">
+              <span
+                className="grid h-7 w-7 shrink-0 place-items-center rounded-full border"
+                style={{
+                  borderColor: 'rgba(74, 222, 128, 0.2)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.14)',
+                }}
+              >
+                <Zap size={14} aria-hidden="true" />
               </span>
-            </motion.button>
-          )
-        })}
+              <span>{option}</span>
+            </span>
+          </motion.button>
+        ))}
       </div>
-
-      {qAnswered ? (
-        <motion.button
-          onClick={handleAutoNext}
-          className="self-start px-6 py-2 text-xs tracking-widest uppercase border"
-          style={{
-            color: '#4ade80',
-            borderColor: 'rgba(74, 222, 128, 0.3)',
-            fontFamily: '"Courier New", monospace',
-          }}
-          whileHover={{ scale: 1.02 }}
-        >
-          {questionNum === totalQuestions ? 'VER RESULTADOS' : 'SIGUIENTE'}
-        </motion.button>
-      ) : (
-        <motion.button
-          onClick={handleConfirm}
-          className="self-start px-6 py-2 text-xs tracking-widest uppercase border"
-          style={{
-            color: selected !== null ? '#4ade80' : 'rgba(74, 222, 128, 0.2)',
-            borderColor: selected !== null ? 'rgba(74, 222, 128, 0.3)' : 'rgba(74, 222, 128, 0.1)',
-            fontFamily: '"Courier New", monospace',
-          }}
-          whileHover={selected !== null ? { scale: 1.02 } : {}}
-          whileTap={selected !== null ? { scale: 0.98 } : {}}
-        >
-          CONFIRMAR
-        </motion.button>
-      )}
     </>
   )
 }
 
 export function BossQuizActivity({ activity, onComplete }: { activity: ActivityConfig; onComplete: () => void }) {
-  const [currentQ, setCurrentQ] = useState(0)
-  const [results, setResults] = useState<boolean[]>([])
-  const [finished, setFinished] = useState(false)
   const ac = activity as Extract<ActivityConfig, { type: 'boss-quiz' }>
-
   const totalQuestions = ac.questions.length
-  const isLast = currentQ === totalQuestions - 1
+
+  type State = { currentQ: number; results: boolean[]; finished: boolean }
+  const [state, dispatch] = useReducer(
+    (prev: State, action: { type: 'answer'; correct: boolean } | { type: 'retry' }): State => {
+      switch (action.type) {
+        case 'answer': {
+          const newResults = [...prev.results, action.correct]
+          const isLast = newResults.length >= totalQuestions
+          return {
+            currentQ: isLast ? prev.currentQ : prev.currentQ + 1,
+            results: newResults,
+            finished: isLast,
+          }
+        }
+        case 'retry':
+          return { currentQ: 0, results: [], finished: false }
+      }
+    },
+    { currentQ: 0, results: [], finished: false },
+  )
+
+  const { currentQ, results, finished } = state
   const correctCount = results.filter(Boolean).length
   const passed = correctCount >= ac.passThreshold
 
-  const handleAnswer = useCallback(
-    (correct: boolean) => {
-      setResults((prev) => {
-        const next = [...prev, correct]
-        if (isLast) {
-          setFinished(true)
-        } else {
-          setCurrentQ((q) => q + 1)
-        }
-        return next
-      })
-    },
-    [isLast],
-  )
-
   if (finished) {
     return (
-      <div
-        className="flex flex-col gap-6"
-        style={{ fontFamily: '"Courier New", monospace' }}
-      >
+      <div className="flex flex-col gap-6" style={{ fontFamily: '"Courier New", monospace' }}>
         <div className="text-xs tracking-widest uppercase" style={{ color: 'rgba(74, 222, 128, 0.4)' }}>
           EVALUACIÓN COMPLETADA
         </div>
@@ -299,11 +234,7 @@ export function BossQuizActivity({ activity, onComplete }: { activity: ActivityC
               </motion.button>
             ) : (
               <motion.button
-                onClick={() => {
-                  setCurrentQ(0)
-                  setResults([])
-                  setFinished(false)
-                }}
+                onClick={() => dispatch({ type: 'retry' })}
                 className="px-6 py-2 text-xs tracking-widest uppercase border"
                 style={{
                   color: 'rgba(239, 68, 68, 0.7)',
@@ -322,16 +253,15 @@ export function BossQuizActivity({ activity, onComplete }: { activity: ActivityC
   }
 
   return (
-    <div
-      className="flex flex-col gap-6"
-      style={{ fontFamily: '"Courier New", monospace' }}
-    >
+    <div className="flex flex-col gap-6" style={{ fontFamily: '"Courier New", monospace' }}>
       <div className="text-xs tracking-widest uppercase" style={{ color: 'rgba(74, 222, 128, 0.4)' }}>
         {ac.instruction}
       </div>
 
-      {/* Progress bar */}
-      <div className="h-1.5 border" style={{ borderColor: 'rgba(74, 222, 128, 0.15)', backgroundColor: 'rgba(74, 222, 128, 0.03)' }}>
+      <div
+        className="h-1.5 border"
+        style={{ borderColor: 'rgba(74, 222, 128, 0.15)', backgroundColor: 'rgba(74, 222, 128, 0.03)' }}
+      >
         <div
           className="h-full transition-all duration-300"
           style={{
@@ -341,14 +271,13 @@ export function BossQuizActivity({ activity, onComplete }: { activity: ActivityC
         />
       </div>
 
-      {/* Keyed by currentQ so timer/state reset on each question */}
       <QuestionCard
         key={currentQ}
         question={ac.questions[currentQ]}
         timePerQuestion={ac.timePerQuestion}
         questionNum={currentQ + 1}
         totalQuestions={totalQuestions}
-        onAnswer={handleAnswer}
+        onAnswer={(correct) => dispatch({ type: 'answer', correct })}
       />
     </div>
   )
