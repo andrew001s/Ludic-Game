@@ -2,7 +2,22 @@
 
 import { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import { Bike, Box, Car, Circle, Gauge, Mountain, Zap } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import type { ActivityConfig } from '@/types/activity'
+
+function getOptionIcon(option: string): LucideIcon {
+  const normalized = option.toLowerCase()
+
+  if (normalized.includes('movimiento') || normalized.includes('rápido')) return Gauge
+  if (normalized.includes('automóvil') || normalized.includes('auto')) return Car
+  if (normalized.includes('bicicleta')) return Bike
+  if (normalized.includes('altura') || normalized.includes('roca')) return Mountain
+  if (normalized.includes('caja') || normalized.includes('detenida') || normalized.includes('inmóvil')) return Box
+  if (normalized.includes('energía') || normalized.includes('electricidad')) return Zap
+
+  return Circle
+}
 
 export function MultipleChoiceActivity({ activity, onComplete }: { activity: ActivityConfig; onComplete: () => void }) {
   const [selected, setSelected] = useState<number | null>(null)
@@ -37,8 +52,33 @@ export function MultipleChoiceActivity({ activity, onComplete }: { activity: Act
         {ac.question}
       </p>
 
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: 'masa', icon: Box, value: 'importa' },
+          { label: 'velocidad', icon: Gauge, value: 'impacta más' },
+          { label: 'movimiento', icon: Zap, value: 'activa energía' },
+        ].map((hint) => (
+          <div
+            key={hint.label}
+            className="flex items-center gap-2 rounded-sm border px-3 py-2"
+            style={{
+              borderColor: 'rgba(74, 222, 128, 0.14)',
+              backgroundColor: 'rgba(74, 222, 128, 0.035)',
+              color: 'rgba(134, 239, 172, 0.68)',
+            }}
+          >
+            <hint.icon size={16} aria-hidden="true" />
+            <div className="min-w-0">
+              <div className="text-[9px] uppercase tracking-widest opacity-50">{hint.label}</div>
+              <div className="truncate text-[11px]">{hint.value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <div className="flex flex-col gap-2">
         {ac.options.map((option, i) => {
+          const OptionIcon = getOptionIcon(option)
           let borderColor = 'rgba(74, 222, 128, 0.2)'
           let bgColor = 'rgba(74, 222, 128, 0.03)'
           let textColor = 'rgba(134, 239, 172, 0.7)'
@@ -76,7 +116,18 @@ export function MultipleChoiceActivity({ activity, onComplete }: { activity: Act
               whileHover={answered ? {} : { scale: 1.005 }}
               whileTap={answered ? {} : { scale: 0.995 }}
             >
-              {option}
+              <span className="flex items-center gap-3">
+                <span
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border"
+                  style={{
+                    borderColor,
+                    backgroundColor: i === selected ? 'rgba(74, 222, 128, 0.1)' : 'rgba(0, 0, 0, 0.16)',
+                  }}
+                >
+                  <OptionIcon size={16} aria-hidden="true" />
+                </span>
+                <span className="leading-relaxed">{option}</span>
+              </span>
             </motion.button>
           )
         })}

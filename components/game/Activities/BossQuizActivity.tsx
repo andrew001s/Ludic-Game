@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
+import { CheckCircle2, Timer, Trophy, XCircle, Zap } from 'lucide-react'
 import type { ActivityConfig, BossQuizQuestion } from '@/types/activity'
 
 function QuestionCard({
@@ -76,14 +77,28 @@ function QuestionCard({
           {questionNum}/{totalQuestions}
         </div>
         <div
-          className="px-2 py-0.5 border text-xs tabular-nums"
+          className="flex items-center gap-1.5 px-2 py-0.5 border text-xs tabular-nums"
           style={{
             borderColor: timeLeft <= 5 && !qAnswered ? 'rgba(239, 68, 68, 0.4)' : 'rgba(74, 222, 128, 0.2)',
             color: timeLeft <= 5 && !qAnswered ? 'rgba(239, 68, 68, 0.8)' : 'rgba(74, 222, 128, 0.6)',
           }}
         >
+          <Timer size={13} aria-hidden="true" />
           {timeLeft}s
         </div>
+      </div>
+
+      <div className="grid grid-cols-5 gap-1.5">
+        {Array.from({ length: totalQuestions }).map((_, index) => (
+          <div
+            key={index}
+            className="h-1.5 rounded-full"
+            style={{
+              backgroundColor: index < questionNum ? 'rgba(74, 222, 128, 0.35)' : 'rgba(74, 222, 128, 0.08)',
+              boxShadow: index === questionNum - 1 ? '0 0 10px rgba(74, 222, 128, 0.24)' : 'none',
+            }}
+          />
+        ))}
       </div>
 
       <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#86efac' }}>
@@ -124,7 +139,24 @@ function QuestionCard({
               whileHover={qAnswered ? {} : { scale: 1.005 }}
               whileTap={qAnswered ? {} : { scale: 0.995 }}
             >
-              {option}
+              <span className="flex items-center gap-3">
+                <span
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full border"
+                  style={{
+                    borderColor,
+                    backgroundColor: i === selected ? 'rgba(74, 222, 128, 0.1)' : 'rgba(0, 0, 0, 0.14)',
+                  }}
+                >
+                  {qAnswered && i === question.correctIndex ? (
+                    <CheckCircle2 size={15} aria-hidden="true" />
+                  ) : qAnswered && i === selected ? (
+                    <XCircle size={15} aria-hidden="true" />
+                  ) : (
+                    <Zap size={14} aria-hidden="true" />
+                  )}
+                </span>
+                <span>{option}</span>
+              </span>
             </motion.button>
           )
         })}
@@ -200,6 +232,17 @@ export function BossQuizActivity({ activity, onComplete }: { activity: ActivityC
 
         <div className="text-center py-6">
           <div
+            className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full border"
+            style={{
+              borderColor: passed ? 'rgba(74, 222, 128, 0.55)' : 'rgba(239, 68, 68, 0.42)',
+              color: passed ? '#4ade80' : 'rgba(239, 68, 68, 0.8)',
+              backgroundColor: passed ? 'rgba(74, 222, 128, 0.08)' : 'rgba(239, 68, 68, 0.06)',
+              boxShadow: passed ? '0 0 22px rgba(74, 222, 128, 0.2)' : 'none',
+            }}
+          >
+            <Trophy size={30} aria-hidden="true" />
+          </div>
+          <div
             className="text-4xl font-bold mb-2"
             style={{
               color: passed ? '#4ade80' : 'rgba(239, 68, 68, 0.8)',
@@ -217,12 +260,15 @@ export function BossQuizActivity({ activity, onComplete }: { activity: ActivityC
           {results.map((r, i) => (
             <div
               key={i}
-              className="w-4 h-4 border"
+              className="grid h-7 w-7 place-items-center rounded-full border"
               style={{
                 borderColor: r ? 'rgba(74, 222, 128, 0.4)' : 'rgba(239, 68, 68, 0.3)',
                 backgroundColor: r ? 'rgba(74, 222, 128, 0.2)' : 'rgba(239, 68, 68, 0.1)',
+                color: r ? '#86efac' : 'rgba(239, 68, 68, 0.72)',
               }}
-            />
+            >
+              {r ? <CheckCircle2 size={15} aria-hidden="true" /> : <XCircle size={15} aria-hidden="true" />}
+            </div>
           ))}
         </div>
 

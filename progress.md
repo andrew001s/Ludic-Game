@@ -11,3 +11,7 @@ Original prompt: usa estas skills para mejorar el lock indicator, que no muestre
 
 - The `develop-web-game` Playwright client was not available at the default `$CODEX_HOME/skills/develop-web-game/scripts/web_game_playwright_client.js` path.
 - The app does not currently expose `window.render_game_to_text` or `window.advanceTime`, so the skill's automated game-observation loop is not wired yet.
+
+- Started Level 1 activity pass: improve robot ordering/flow, terminal visuals/speed feedback, and icon-led activity UI.
+
+- Restored reusable NarraLeaf character sprite motion with soft entry fade and visual-novel breathing for sprites under /assets/sprites/.

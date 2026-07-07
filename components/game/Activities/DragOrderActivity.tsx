@@ -2,17 +2,49 @@
 
 import { useState, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
+import { ArrowRight, Bot, Cog, Gauge, Zap } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import type { ActivityConfig } from '@/types/activity'
+
+function getRobotStepIcon(item: string): LucideIcon {
+  const normalized = item.toLowerCase()
+
+  if (normalized.includes('movimiento')) return Gauge
+  if (normalized.includes('cinética')) return Zap
+  if (normalized.includes('motor')) return Cog
+  if (normalized.includes('robot')) return Bot
+
+  return Zap
+}
+
+function getSeededOrder(length: number, seed: string) {
+  const values = Array.from({ length }, (_, index) => index)
+  let hash = 0
+
+  for (const char of seed) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+  }
+
+  for (let index = values.length - 1; index > 0; index -= 1) {
+    hash = (hash * 1664525 + 1013904223) >>> 0
+    const swapIndex = hash % (index + 1)
+    ;[values[index], values[swapIndex]] = [values[swapIndex], values[index]]
+  }
+
+  if (values.every((value, index) => value === index) && values.length > 1) {
+    ;[values[0], values[1]] = [values[1], values[0]]
+  }
+
+  return values
+}
 
 export function DragOrderActivity({ activity, onComplete }: { activity: ActivityConfig; onComplete: () => void }) {
   const [order, setOrder] = useState<number[]>([])
   const [answered, setAnswered] = useState(false)
   const ac = activity as Extract<ActivityConfig, { type: 'drag-order' }>
 
-  const remaining = useMemo(
-    () => ac.items.filter((_, i) => !order.includes(i)),
-    [ac.items, order],
-  )
+  const availableOrder = useMemo(() => getSeededOrder(ac.items.length, ac.id), [ac.id, ac.items.length])
+  const remaining = availableOrder.filter((index) => !order.includes(index))
 
   const handleSelectItem = useCallback(
     (index: number) => {
@@ -58,11 +90,63 @@ export function DragOrderActivity({ activity, onComplete }: { activity: Activity
         {ac.question}
       </p>
 
+      <div
+        className="relative overflow-hidden rounded-sm border p-4"
+        style={{
+          borderColor: 'rgba(74, 222, 128, 0.14)',
+          background:
+            'radial-gradient(circle at 18% 50%, rgba(74,222,128,0.12), transparent 24%), linear-gradient(90deg, rgba(74,222,128,0.035), rgba(20,83,45,0.04))',
+        }}
+      >
+        <div className="absolute left-8 right-8 top-1/2 h-px -translate-y-1/2" style={{ background: 'rgba(74, 222, 128, 0.18)' }} />
+        <div className="relative grid grid-cols-4 gap-2">
+          {ac.correctOrder.map((itemIndex, step) => {
+            const selectedIndex = order[step]
+            const StepIcon = selectedIndex === undefined ? getRobotStepIcon(ac.items[itemIndex]) : getRobotStepIcon(ac.items[selectedIndex])
+            const isStepCorrect = answered && selectedIndex === itemIndex
+            const isStepWrong = answered && selectedIndex !== undefined && selectedIndex !== itemIndex
+
+            return (
+              <div key={step} className="relative flex flex-col items-center gap-2">
+                {step > 0 && (
+                  <ArrowRight
+                    size={16}
+                    className="absolute -left-3 top-6 hidden sm:block"
+                    style={{ color: 'rgba(74, 222, 128, 0.32)' }}
+                    aria-hidden="true"
+                  />
+                )}
+                <div
+                  className="grid h-12 w-12 place-items-center rounded-full border"
+                  style={{
+                    borderColor: isStepWrong
+                      ? 'rgba(239, 68, 68, 0.42)'
+                      : isStepCorrect
+                        ? 'rgba(74, 222, 128, 0.68)'
+                        : selectedIndex !== undefined
+                          ? 'rgba(74, 222, 128, 0.42)'
+                          : 'rgba(74, 222, 128, 0.16)',
+                    backgroundColor: selectedIndex !== undefined ? 'rgba(74, 222, 128, 0.1)' : 'rgba(0, 0, 0, 0.18)',
+                    color: isStepWrong ? 'rgba(239, 68, 68, 0.74)' : '#86efac',
+                    boxShadow: selectedIndex !== undefined ? '0 0 18px rgba(74, 222, 128, 0.12)' : 'none',
+                  }}
+                >
+                  <StepIcon size={22} aria-hidden="true" />
+                </div>
+                <div className="text-center text-[10px] uppercase tracking-wider" style={{ color: 'rgba(134, 239, 172, 0.45)' }}>
+                  Paso {step + 1}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Selected order */}
       <div className="flex flex-col gap-1.5 min-h-[100px]">
         {order.length === 0 && (
           <div className="text-xs py-8 text-center" style={{ color: 'rgba(74, 222, 128, 0.15)' }}>
-            Selecciona los elementos en el orden correcto
+            Selecciona las piezas para encender la ruta del robot
           </div>
         )}
         {order.map((itemIndex, pos) => (
@@ -92,7 +176,13 @@ export function DragOrderActivity({ activity, onComplete }: { activity: Activity
             animate={{ opacity: 1, x: 0 }}
             layout
           >
-            {pos + 1}. {ac.items[itemIndex]}
+            <span className="flex items-center gap-3">
+              {(() => {
+                const ItemIcon = getRobotStepIcon(ac.items[itemIndex])
+                return <ItemIcon size={17} aria-hidden="true" />
+              })()}
+              <span>{pos + 1}. {ac.items[itemIndex]}</span>
+            </span>
           </motion.button>
         ))}
       </div>
@@ -100,21 +190,25 @@ export function DragOrderActivity({ activity, onComplete }: { activity: Activity
       {/* Available items */}
       {remaining.length > 0 && (
         <div className="flex flex-wrap gap-2 pt-2 border-t" style={{ borderColor: 'rgba(74, 222, 128, 0.08)' }}>
-          {ac.items.map((item, i) => {
-            if (order.includes(i)) return null
+          {remaining.map((i) => {
+            const item = ac.items[i]
+            const ItemIcon = getRobotStepIcon(item)
+
             return (
               <motion.button
                 key={i}
                 onClick={() => handleSelectItem(i)}
                 disabled={answered}
-                className="px-3 py-1.5 text-xs border"
+                className="flex items-center gap-2 px-3 py-2 text-xs border"
                 style={{
                   borderColor: 'rgba(74, 222, 128, 0.2)',
                   color: 'rgba(134, 239, 172, 0.6)',
+                  backgroundColor: 'rgba(74, 222, 128, 0.035)',
                 }}
                 whileHover={{ borderColor: 'rgba(74, 222, 128, 0.4)' }}
                 whileTap={{ scale: 0.95 }}
               >
+                <ItemIcon size={14} aria-hidden="true" />
                 {item}
               </motion.button>
             )

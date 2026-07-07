@@ -61,28 +61,32 @@ export function DialogueBox({ lines, onComplete }: DialogueBoxProps) {
           <motion.div
             key={line.speaker}
             className="pointer-events-none fixed inset-0 z-0"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, scale: 0.1, y: 20 }}
             animate={{
               opacity: 1,
+              scale: 1,
               y: 0,
             }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, scale: 0.7, y: -15 }}
             transition={{
-              duration: 0.28,
-              ease: 'easeOut',
+              type: 'spring',
+              stiffness: 400,
+              damping: 16,
+              mass: 0.6,
             }}
             style={{ transformOrigin: '50% 100%' }}
           >
             <motion.div
               className="absolute inset-0"
               animate={{
-                y: [0, -2, 0],
-                scaleY: [1, 1.003, 1],
+                y: [0, -5, 0, -2, 0],
+                scaleY: [1, 1.02, 1, 1.008, 1],
               }}
               transition={{
-                duration: 2.8,
+                duration: 4.2,
                 repeat: Infinity,
                 ease: 'easeInOut',
+                times: [0, 0.25, 0.55, 0.8, 1],
               }}
               style={{ transformOrigin: '50% 100%' }}
             >

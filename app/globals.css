@@ -44,6 +44,13 @@ body {
   display: inline !important;
 }
 
+.__narraleaf_content-player img[src*="/assets/sprites/"] {
+  animation: visual-novel-character-breathe 5s ease-in-out 400ms infinite;
+  filter: drop-shadow(0 24px 34px rgba(0, 0, 0, 0.56));
+  transform-origin: center bottom;
+  will-change: transform, filter;
+}
+
 @keyframes float-particle {
   0%,
   100% {
@@ -61,6 +68,43 @@ body {
   75% {
     transform: translateY(-5px) scale(1.1);
     opacity: 0.8;
+  }
+}
+
+@keyframes visual-novel-character-enter {
+  0% {
+    opacity: 0;
+    scale: 0.5;
+    translate: 0 30px;
+    filter: blur(4px) drop-shadow(0 28px 40px rgba(0, 0, 0, 0));
+  }
+  60% {
+    opacity: 1;
+    scale: 1.04;
+    translate: 0 -6px;
+    filter: blur(0) drop-shadow(0 24px 34px rgba(0, 0, 0, 0.56));
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+    filter: blur(0) drop-shadow(0 24px 34px rgba(0, 0, 0, 0.56));
+  }
+}
+
+@keyframes visual-novel-character-breathe {
+  0%,
+  100% {
+    transform: scale(1) translateY(0);
+  }
+  25% {
+    transform: scale(1.035) translateY(-1.4vh);
+  }
+  55% {
+    transform: scale(1) translateY(0);
+  }
+  80% {
+    transform: scale(1.012) translateY(-0.5vh);
   }
 }
 

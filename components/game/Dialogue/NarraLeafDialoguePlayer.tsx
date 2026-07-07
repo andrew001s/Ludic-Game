@@ -10,6 +10,7 @@ import {
   Scene,
   Story,
   Texts,
+  Transform,
   useDialog,
 } from 'narraleaf-react'
 import type { ChainedActions } from 'narraleaf-react'
@@ -76,6 +77,25 @@ function NarraLeafDialogueUI() {
   )
 }
 
+const popInTransform = Transform.create()
+  .zoom(0.15)
+  .position({ yoffset: 20 })
+  .opacity(0)
+  .commit({ duration: 0 })
+  .zoom(1.12)
+  .position({ yoffset: -4 })
+  .opacity(1)
+  .commit({ duration: 180, ease: 'easeOut' })
+  .zoom(1)
+  .position({ yoffset: 0 })
+  .commit({ duration: 80, ease: 'easeOut' })
+
+const exitTransform = Transform.create()
+  .scale(0.7, 0.7)
+  .position({ yoffset: -12 })
+  .opacity(0)
+  .commit({ duration: 180, ease: 'easeOut' })
+
 function createDialogueStory(id: string, lines: DialogueLine[]) {
   const story = new Story(`dialogue-${id}`)
   const scene = new Scene(`dialogue-${id}`, {
@@ -90,12 +110,17 @@ function createDialogueStory(id: string, lines: DialogueLine[]) {
     const image = getSpeakerImage(profile)
 
     if (visibleImage && visibleImage !== image) {
-      actions.push(visibleImage.hide({ duration: 180, ease: 'easeOut' }))
+      actions.push(visibleImage.transform(
+        exitTransform.copy()
+      ))
       visibleImage = null
     }
 
     if (image && visibleImage !== image) {
-      actions.push(image.show({ duration: 260, ease: 'easeOut' }))
+      actions.push(image.show({ duration: 0 }))
+      actions.push(image.transform(
+        popInTransform.copy()
+      ))
       visibleImage = image
     }
 
@@ -103,7 +128,9 @@ function createDialogueStory(id: string, lines: DialogueLine[]) {
   }
 
   if (visibleImage) {
-    actions.push(visibleImage.hide({ duration: 180, ease: 'easeOut' }))
+    actions.push(visibleImage.transform(
+      exitTransform.copy()
+    ))
   }
 
   scene.action(actions)
