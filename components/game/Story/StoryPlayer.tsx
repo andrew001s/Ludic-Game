@@ -1,54 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { TextsPreview } from 'narraleaf-react'
 import { STORY_SCENES } from '@/data/story'
 import { useAudio } from '@/hooks/useAudio'
 
 interface StoryPlayerProps {
   onFinish: () => void
-}
-
-function TypewriterText({ text, speed = 40, onComplete }: { text: string; speed?: number; onComplete?: () => void }) {
-  const [displayed, setDisplayed] = useState('')
-  const indexRef = useRef(0)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const onCompleteRef = useRef(onComplete)
-  onCompleteRef.current = onComplete
-
-  useEffect(() => {
-    setDisplayed('')
-    indexRef.current = 0
-
-    timerRef.current = setInterval(() => {
-      if (indexRef.current < text.length) {
-        setDisplayed(text.slice(0, indexRef.current + 1))
-        indexRef.current++
-      } else {
-        if (timerRef.current) clearInterval(timerRef.current)
-        onCompleteRef.current?.()
-      }
-    }, speed)
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [text, speed])
-
-  return (
-    <span>
-      {displayed}
-      {indexRef.current < text.length && (
-        <span
-          className="inline-block w-[3px] h-[1em] ml-0.5 align-middle animate-pulse"
-          style={{
-            backgroundColor: '#4ade80',
-            boxShadow: '0 0 6px #4ade80',
-          }}
-        />
-      )}
-    </span>
-  )
 }
 
 export function StoryPlayer({ onFinish }: StoryPlayerProps) {
@@ -150,11 +109,16 @@ export function StoryPlayer({ onFinish }: StoryPlayerProps) {
                     minHeight: '4em',
                   }}
                 >
-                  <TypewriterText
+                  <TextsPreview
                     key={scene.id}
                     text={scene.text}
-                    speed={35}
-                    onComplete={() => setTextComplete(true)}
+                    cps={28}
+                    loop={false}
+                    defaultColor="#86efac"
+                    fontFamily='"Courier New", monospace'
+                    fontWeight={700}
+                    className="whitespace-pre-line leading-relaxed"
+                    onCompleted={() => setTextComplete(true)}
                   />
                 </div>
 

@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Nametag, TextsPreview } from 'narraleaf-react'
 import type { DialogueLine } from '@/types/level'
-import { getSpeakerImageSrc, getSpeakerProfile } from '@/app/constants/dialogueSpeakers'
+import { createSpeakerSentence, getSpeakerImageSrc, getSpeakerProfile } from '@/app/constants/dialogueSpeakers'
 
 interface DialogueBoxProps {
   lines: DialogueLine[]
@@ -42,9 +42,14 @@ export function DialogueBox({ lines, onComplete }: DialogueBoxProps) {
   }, [handleAdvance])
 
   const line = lines[currentLine]
-  if (!line) return null
-  const speakerProfile = getSpeakerProfile(line.speaker)
+  const speakerProfile = getSpeakerProfile(line?.speaker ?? '')
   const spriteSrc = getSpeakerImageSrc(speakerProfile)
+  const sentence = useMemo(
+    () => (line ? createSpeakerSentence(speakerProfile, line.text) : null),
+    [line, speakerProfile],
+  )
+
+  if (!line || !sentence) return null
 
   return (
     <div
@@ -117,7 +122,7 @@ export function DialogueBox({ lines, onComplete }: DialogueBoxProps) {
         <div className="text-sm sm:text-base leading-relaxed min-h-[2em]" style={{ color: '#dfe9ae' }}>
           <TextsPreview
             key={`${currentLine}-${line.text}`}
-            text={line.text}
+            sentence={sentence}
             cps={50}
             loop={false}
             defaultColor="#dfe9ae"
