@@ -1,4 +1,4 @@
-export type ActivityType = 'multiple-choice' | 'drag-order' | 'fill-blanks' | 'slider' | 'boss-quiz'
+export type ActivityType = 'multiple-choice' | 'drag-order' | 'fill-blanks' | 'slider' | 'boss-quiz' | 'robot-path'
 
 export interface ActivityFeedback {
   success: string
@@ -71,9 +71,21 @@ export interface BossQuizActivity {
   feedback: ActivityFeedback
 }
 
+export interface RobotPathActivity {
+  id: string
+  type: 'robot-path'
+  title: string
+  instruction: string
+  question: string
+  items: string[]
+  correctOrder: number[]
+  feedback: ActivityFeedback
+}
+
 export type ActivityConfig =
   | MultipleChoiceActivity
   | DragOrderActivity
   | FillBlanksActivity
   | SliderActivity
   | BossQuizActivity
+  | RobotPathActivity

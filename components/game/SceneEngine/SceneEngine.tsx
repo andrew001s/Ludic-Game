@@ -1,12 +1,15 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import type { LevelConfig } from '@/types/level'
+import type { EnginePhase } from '@/hooks/useSceneEngine'
 import { useSceneEngine } from '@/hooks/useSceneEngine'
 import { useAudio } from '@/hooks/useAudio'
 import { InteractiveObject } from './InteractiveObject'
 import { LevelBackground } from './LevelBackground'
+import { LevelParticles } from './LevelParticles'
+import { ActivityBurst } from './ActivityBurst'
 import { NarraLeafDialoguePlayer } from '@/components/game/Dialogue/NarraLeafDialoguePlayer'
 import { Modal } from '@/components/ui/Modal'
 import { ActivityRenderer } from '@/components/game/Activities/ActivityRegistry'
@@ -19,6 +22,21 @@ interface SceneEngineProps {
 export function SceneEngine({ levelConfig, onLevelComplete }: SceneEngineProps) {
   const { playSFX } = useAudio()
   const { state, actions, helpers } = useSceneEngine(levelConfig)
+  const prevPhaseRef = useRef<EnginePhase>(state.phase)
+  const [burstTrigger, setBurstTrigger] = useState<'enter' | 'complete' | null>(null)
+
+  useEffect(() => {
+    const prev = prevPhaseRef.current
+    const curr = state.phase
+    if (prev !== curr) {
+      if (curr === 'activity') {
+        setBurstTrigger('enter')
+      } else if (prev === 'activity' && (curr === 'exploration' || curr === 'completion')) {
+        setBurstTrigger('complete')
+      }
+      prevPhaseRef.current = curr
+    }
+  }, [state.phase])
 
   const handleDialogueComplete = useCallback(() => {
     if (state.phase === 'introduction') {
@@ -43,6 +61,12 @@ export function SceneEngine({ levelConfig, onLevelComplete }: SceneEngineProps) 
     <div className="fixed inset-0 overflow-hidden" style={{ backgroundColor: '#050805' }}>
       {/* Background */}
       <LevelBackground levelId={levelConfig.id} />
+
+      {/* Ambient particles */}
+      <LevelParticles levelId={levelConfig.id} />
+
+      {/* Activity burst effects */}
+      <ActivityBurst trigger={burstTrigger} />
 
       {/* Interactive objects */}
       <div className="absolute inset-0">
