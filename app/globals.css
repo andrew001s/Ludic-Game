@@ -33,6 +33,17 @@ body {
   color: #f0fdf4;
 }
 
+.narraleaf-dialog-text,
+.narraleaf-dialog-text * {
+  overflow-wrap: normal !important;
+  white-space: normal !important;
+  word-break: normal !important;
+}
+
+.narraleaf-dialog-text span {
+  display: inline !important;
+}
+
 @keyframes float-particle {
   0%,
   100% {

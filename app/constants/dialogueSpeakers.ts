@@ -49,8 +49,20 @@ export function getSpeakerImageSrc(profile: SpeakerProfile): string | null {
   return typeof currentSrc === 'string' ? currentSrc : null
 }
 
+export function getSpeakerImage(profile: SpeakerProfile): NarraLeafImage | null {
+  return profile.image ?? null
+}
+
+export function getSpeakerCharacter(profile: SpeakerProfile): NarraLeafCharacter {
+  if (!profile.character) {
+    profile.character = new NarraLeafCharacter(profile.displayName)
+  }
+
+  return profile.character
+}
+
 export function createSpeakerSentence(profile: SpeakerProfile, text: string): NarraLeafSentence {
   return new NarraLeafSentence(text, {
-    character: profile.character ?? null,
+    character: getSpeakerCharacter(profile),
   })
 }

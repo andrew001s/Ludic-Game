@@ -7,7 +7,7 @@ import { useSceneEngine } from '@/hooks/useSceneEngine'
 import { useAudio } from '@/hooks/useAudio'
 import { InteractiveObject } from './InteractiveObject'
 import { LevelBackground } from './LevelBackground'
-import { DialogueBox } from '@/components/game/Dialogue/DialogueBox'
+import { NarraLeafDialoguePlayer } from '@/components/game/Dialogue/NarraLeafDialoguePlayer'
 import { Modal } from '@/components/ui/Modal'
 import { ActivityRenderer } from '@/components/game/Activities/ActivityRegistry'
 
@@ -78,8 +78,9 @@ export function SceneEngine({ levelConfig, onLevelComplete }: SceneEngineProps) 
       {/* Dialogue */}
       <AnimatePresence>
         {(state.phase === 'introduction' || state.phase === 'completion') && state.dialogueLines.length > 0 && (
-          <DialogueBox
+          <NarraLeafDialoguePlayer
             key={state.phase}
+            id={`${levelConfig.id}-${state.phase}`}
             lines={state.dialogueLines}
             onComplete={handleDialogueComplete}
           />
