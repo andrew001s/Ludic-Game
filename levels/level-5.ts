@@ -47,7 +47,7 @@ export const level5: LevelConfig = {
       id: 'reaccion-quimica',
       type: 'interactive',
       title: 'Reaccion Quimica',
-      area: { x: 72, y: 76, width: 23, height: 20 },
+      area: { x: 72, y: 70, width: 23, height: 30 },
       unlockAfter: 'consola-bioquimica',
       activityId: 'activity-25',
       visual: {
