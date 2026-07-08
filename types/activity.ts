@@ -79,7 +79,7 @@ export interface RobotPathActivity {
   question: string
   items: string[]
   correctOrder: number[]
-  mode?: 'path-order' | 'light-rotation'
+  mode?: 'path-order' | 'light-rotation' | 'magnetic-circuit'
   nodes?: {
     id: string
     label: string
