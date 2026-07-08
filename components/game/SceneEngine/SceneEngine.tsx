@@ -103,7 +103,7 @@ export function SceneEngine({ levelConfig, onLevelComplete }: SceneEngineProps) 
       <AnimatePresence>
         {(state.phase === 'introduction' || state.phase === 'completion') && state.dialogueLines.length > 0 && (
           <NarraLeafDialoguePlayer
-            key={state.phase}
+            key={`${levelConfig.id}-${state.phase}`}
             id={`${levelConfig.id}-${state.phase}`}
             lines={state.dialogueLines}
             onComplete={handleDialogueComplete}

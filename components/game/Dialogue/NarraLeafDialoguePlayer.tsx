@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Dialog,
   GameProviders,
@@ -8,6 +8,7 @@ import {
   Nametag,
   Player,
   Scene,
+  Script,
   Story,
   Texts,
   Transform,
@@ -66,15 +67,17 @@ function NarraLeafDialogueContent() {
   )
 }
 
-function NarraLeafDialogueUI() {
-  return (
-    <Dialog
-      className="absolute bottom-0 left-0 right-0 z-20 p-4 sm:p-6"
-      style={{ fontFamily: '"Courier New", monospace' }}
-    >
-      <NarraLeafDialogueContent />
-    </Dialog>
-  )
+function createDialogueUI() {
+  return function NarraLeafDialogueUI() {
+    return (
+      <Dialog
+        className="absolute bottom-0 left-0 right-0 z-20 p-4 sm:p-6"
+        style={{ fontFamily: '"Courier New", monospace' }}
+      >
+        <NarraLeafDialogueContent />
+      </Dialog>
+    )
+  }
 }
 
 const popInTransform = Transform.create()
@@ -96,7 +99,7 @@ const exitTransform = Transform.create()
   .opacity(0)
   .commit({ duration: 180, ease: 'easeOut' })
 
-function createDialogueStory(id: string, lines: DialogueLine[]) {
+function createDialogueStory(id: string, lines: DialogueLine[], onStoryComplete: () => void) {
   const story = new Story(`dialogue-${id}`)
   const scene = new Scene(`dialogue-${id}`, {
     background: 'transparent',
@@ -133,6 +136,12 @@ function createDialogueStory(id: string, lines: DialogueLine[]) {
     ))
   }
 
+  actions.push(
+    Script.execute(() => {
+      onStoryComplete()
+    })
+  )
+
   scene.action(actions)
   story.entry(scene)
 
@@ -141,28 +150,35 @@ function createDialogueStory(id: string, lines: DialogueLine[]) {
 
 export function NarraLeafDialoguePlayer({ id, lines, onComplete }: NarraLeafDialoguePlayerProps) {
   const completedRef = useRef(false)
-  const game = useMemo(() => new Game({ dialog: NarraLeafDialogueUI }), [])
-  const story = useMemo(() => createDialogueStory(id, lines), [id, lines])
+  const [story, setStory] = useState<Story | null>(null)
 
-  const handleComplete = () => {
+  const handleComplete = useCallback(() => {
     if (completedRef.current) return
     completedRef.current = true
     onComplete()
-  }
+  }, [onComplete])
+
+  const game = useMemo(() => new Game({ dialog: createDialogueUI() }), [])
+
+  useEffect(() => {
+    completedRef.current = false
+    setStory(createDialogueStory(id, lines, handleComplete))
+  }, [id, lines, handleComplete])
 
   return (
     <div className="fixed inset-0 z-40">
       <GameProviders game={game}>
-        <Player
-          story={story}
-          width="100%"
-          height="100%"
-          onReady={({ liveGame }) => {
-            liveGame.game.preference.setPreference('cps', 50)
-            liveGame.newGame()
-          }}
-          onEnd={handleComplete}
-        />
+        {story && (
+          <Player
+            story={story}
+            width="100%"
+            height="100%"
+            onReady={({ liveGame }) => {
+              liveGame.game.preference.setPreference('cps', 50)
+              liveGame.newGame()
+            }}
+          />
+        )}
       </GameProviders>
     </div>
   )

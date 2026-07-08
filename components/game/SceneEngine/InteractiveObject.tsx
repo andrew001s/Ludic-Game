@@ -50,7 +50,7 @@ export function InteractiveObject({ config, unlocked, completed, onClick, hoverS
       }}
       initial={{ opacity: 0 }}
       animate={{
-        opacity: completed ? 0.82 : unlocked ? 1 : 0.82,
+        opacity: 1,
         scale: 1,
       }}
       whileHover={
@@ -86,10 +86,10 @@ export function InteractiveObject({ config, unlocked, completed, onClick, hoverS
                 objectFit: visual?.fit ?? 'contain',
                 opacity: visual?.opacity ?? 1,
                 filter: completed
-                  ? 'saturate(0.8) contrast(1.02) brightness(0.82)'
+                  ? 'saturate(0.92) contrast(1.04) brightness(0.94)'
                   : unlocked
-                    ? 'saturate(0.92) contrast(1.05) brightness(0.96)'
-                    : 'grayscale(0.45) saturate(0.72) contrast(0.9) brightness(0.72)',
+                    ? 'saturate(0.98) contrast(1.05) brightness(1)'
+                    : 'grayscale(0.18) saturate(0.92) contrast(1) brightness(0.94)',
               }}
             />
           ) : (
