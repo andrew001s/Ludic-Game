@@ -19,3 +19,7 @@ Original prompt: usa estas skills para mejorar el lock indicator, que no muestre
 - Improved ctivity-28 into a guided energy-cascade flow with step hints, per-energy descriptions, visual accents, and auto-complete on correct sequence.
 - Extended drag-order activities with optional metadata (mode, slotLabels, itemDescriptions, itemAccents, stepHints) while keeping existing activities compatible.
 - Upgraded DragOrderActivity UI with progress state, richer cards, energy-map sidebar, and guided next-step feedback for final-level energy restoration.
+
+- Refactored drag-order into declarative metadata with itemDetails, interactionMode, helper-panel copy, and empty-state messaging.
+- Extracted drag-order inference/shuffle helpers to components/game/Activities/dragOrder.shared.ts so the renderer no longer hardcodes domain-specific activity cases.
+- Rebuilt ctivity-29 as a guided ecosystem flow with explicit energy-transfer stages, richer hints, and clearer biological roles.

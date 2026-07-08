@@ -5,6 +5,30 @@ export interface ActivityFeedback {
   error: string
 }
 
+export type DragOrderIconKey =
+  | 'atom'
+  | 'battery'
+  | 'beaker'
+  | 'bot'
+  | 'cog'
+  | 'flask'
+  | 'gauge'
+  | 'leaf'
+  | 'lightbulb'
+  | 'paw'
+  | 'sparkles'
+  | 'sprout'
+  | 'sun'
+  | 'waves'
+  | 'zap'
+
+export interface DragOrderItemDetail {
+  icon?: DragOrderIconKey
+  slotLabel?: string
+  description?: string
+  accent?: string
+}
+
 export interface MultipleChoiceActivity {
   id: string
   type: 'multiple-choice'
@@ -24,10 +48,11 @@ export interface DragOrderActivity {
   question: string
   items: string[]
   correctOrder: number[]
-  mode?: 'default' | 'guided-energy'
-  slotLabels?: string[]
-  itemDescriptions?: string[]
-  itemAccents?: string[]
+  interactionMode?: 'free-order' | 'guided'
+  itemDetails?: DragOrderItemDetail[]
+  helperPanelTitle?: string
+  helperPanelDescription?: string
+  emptyStateMessage?: string
   stepHints?: string[]
   feedback: ActivityFeedback
 }
