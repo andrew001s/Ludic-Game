@@ -24,6 +24,11 @@ export interface DragOrderActivity {
   question: string
   items: string[]
   correctOrder: number[]
+  mode?: 'default' | 'guided-energy'
+  slotLabels?: string[]
+  itemDescriptions?: string[]
+  itemAccents?: string[]
+  stepHints?: string[]
   feedback: ActivityFeedback
 }
 

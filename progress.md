@@ -15,3 +15,7 @@ Original prompt: usa estas skills para mejorar el lock indicator, que no muestre
 - Started Level 1 activity pass: improve robot ordering/flow, terminal visuals/speed feedback, and icon-led activity UI.
 
 - Restored reusable NarraLeaf character sprite motion with soft entry fade and visual-novel breathing for sprites under /assets/sprites/.
+
+- Improved ctivity-28 into a guided energy-cascade flow with step hints, per-energy descriptions, visual accents, and auto-complete on correct sequence.
+- Extended drag-order activities with optional metadata (mode, slotLabels, itemDescriptions, itemAccents, stepHints) while keeping existing activities compatible.
+- Upgraded DragOrderActivity UI with progress state, richer cards, energy-map sidebar, and guided next-step feedback for final-level energy restoration.
