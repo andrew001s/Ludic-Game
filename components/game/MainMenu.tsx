@@ -65,11 +65,7 @@ export function MainMenu() {
   const handleContinue = useCallback(() => {
     if (!hasSave || !save) return
     playSFX('confirm')
-    const params = new URLSearchParams()
-    params.set('level', String(save.currentLevel))
-    if (save.progress !== undefined) params.set('progress', String(save.progress))
-    if (save.character) params.set('character', save.character)
-    router.push(`/game?${params.toString()}`)
+    router.push(`/game/level-${save.currentLevel}`)
   }, [hasSave, save, router, playSFX])
 
   const handleOpenLeaderboard = useCallback(() => {
