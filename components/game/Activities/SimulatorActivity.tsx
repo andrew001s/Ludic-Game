@@ -3,7 +3,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Gauge, Zap, ArrowRight, TestTube } from 'lucide-react'
-import type { ActivityConfig, SimulatorActivity as SimulatorActivityConfig } from '@/types/activity'
+import type { ActivityComponentProps, SimulatorActivity as SimulatorActivityConfig } from '@/types/activity'
+import { useActivityMetrics } from '@/hooks/useActivityMetrics'
 
 function useDriveKeyframe(id: string) {
   useEffect(() => {
@@ -20,13 +21,14 @@ function useDriveKeyframe(id: string) {
   }, [id])
 }
 
-export function SimulatorActivity({ activity, onComplete }: { activity: ActivityConfig; onComplete: () => void }) {
+export function SimulatorActivity({ activity, onComplete }: ActivityComponentProps) {
   const ac = activity as SimulatorActivityConfig
   const [phase, setPhase] = useState<'simulate' | 'question' | 'result'>('simulate')
   const [selectedVehicleId, setSelectedVehicleId] = useState(ac.vehicles[0].id)
   const [throttle, setThrottle] = useState(50)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [hasAnswered, setHasAnswered] = useState(false)
+  const { buildCompletion, registerInteraction, registerMistake, registerRetry } = useActivityMetrics(ac)
 
   useDriveKeyframe(ac.id)
 
@@ -47,21 +49,28 @@ export function SimulatorActivity({ activity, onComplete }: { activity: Activity
   const isCorrect = selectedAnswer === ac.followUpCorrectIndex
 
   function handleThrottleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    registerInteraction()
     setThrottle(Number(e.target.value))
   }
 
   function handleProceedToQuestion() {
+    registerInteraction()
     setPhase('question')
   }
 
   function handleAnswer(index: number) {
     if (hasAnswered) return
+    registerInteraction()
+    if (index !== ac.followUpCorrectIndex) {
+      registerMistake()
+    }
     setSelectedAnswer(index)
     setHasAnswered(true)
     setPhase('result')
   }
 
   function handleRetry() {
+    registerRetry()
     setPhase('question')
     setSelectedAnswer(null)
     setHasAnswered(false)
@@ -311,7 +320,7 @@ export function SimulatorActivity({ activity, onComplete }: { activity: Activity
           <div className="flex gap-3 mt-4">
             {isCorrect ? (
               <motion.button
-                onClick={onComplete}
+                onClick={() => onComplete(buildCompletion({ accuracyRatio: isCorrect ? 1 : 0 }))}
                 className="px-6 py-2 text-xs tracking-widest uppercase border"
                 style={{
                   color: '#4ade80',

@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from 'react'
 import type { LevelConfig, InteractiveObjectConfig, DialogueLine } from '@/types/level'
 import { getActivityConfig } from '@/services/activity.service'
 import type { ActivityConfig } from '@/types/activity'
+import type { ActivityCompletionMetrics } from '@/types/progress'
 
 export type EnginePhase = 'introduction' | 'exploration' | 'activity' | 'completion'
 
@@ -15,12 +16,13 @@ export interface SceneEngineState {
   completedObjects: Set<string>
   currentDialogueIndex: number
   dialogueComplete: boolean
+  completedActivities: ActivityCompletionMetrics[]
 }
 
 export interface SceneEngineActions {
   startExploration: () => void
   interactWithObject: (obj: InteractiveObjectConfig) => void
-  completeActivity: () => void
+  completeActivity: (metrics: ActivityCompletionMetrics) => void
   closeActivity: () => void
   nextDialogue: () => void
   setDialogueComplete: (v: boolean) => void
@@ -33,6 +35,7 @@ export function useSceneEngine(levelConfig: LevelConfig) {
   const [activeActivity, setActiveActivity] = useState<ActivityConfig | null>(null)
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0)
   const [dialogueComplete, setDialogueComplete] = useState(false)
+  const [completedActivities, setCompletedActivities] = useState<ActivityCompletionMetrics[]>([])
 
   const dialogueLines = useMemo((): DialogueLine[] => {
     if (phase === 'introduction') return levelConfig.introduction
@@ -80,8 +83,9 @@ export function useSceneEngine(levelConfig: LevelConfig) {
     [],
   )
 
-  const completeActivity = useCallback(() => {
+  const completeActivity = useCallback((metrics: ActivityCompletionMetrics) => {
     if (!activeObject) return
+    setCompletedActivities((prev) => [...prev, metrics])
     setCompletedObjects((prev) => {
       const next = new Set(prev)
       next.add(activeObject.id)
@@ -124,6 +128,7 @@ export function useSceneEngine(levelConfig: LevelConfig) {
       completedObjects,
       currentDialogueIndex,
       dialogueComplete,
+      completedActivities,
     } as SceneEngineState,
     actions: {
       startExploration,

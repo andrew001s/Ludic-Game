@@ -4,7 +4,8 @@ import { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Bike, Box, Car, Circle, Gauge, Mountain, Zap } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import type { ActivityConfig } from '@/types/activity'
+import type { ActivityComponentProps, ActivityConfig } from '@/types/activity'
+import { useActivityMetrics } from '@/hooks/useActivityMetrics'
 
 function getOptionIcon(option: string): LucideIcon {
   const normalized = option.toLowerCase()
@@ -19,23 +20,35 @@ function getOptionIcon(option: string): LucideIcon {
   return Circle
 }
 
-export function MultipleChoiceActivity({ activity, onComplete }: { activity: ActivityConfig; onComplete: () => void }) {
+export function MultipleChoiceActivity({ activity, onComplete }: ActivityComponentProps) {
   const [selected, setSelected] = useState<number | null>(null)
   const [answered, setAnswered] = useState(false)
   const ac = activity as Extract<ActivityConfig, { type: 'multiple-choice' }>
+  const { buildCompletion, registerInteraction, registerMistake, registerRetry } = useActivityMetrics(ac)
 
   const handleSelect = useCallback(
     (index: number) => {
       if (answered) return
+      registerInteraction()
       setSelected(index)
     },
-    [answered],
+    [answered, registerInteraction],
   )
 
   const handleConfirm = useCallback(() => {
     if (selected === null) return
+    registerInteraction()
+    if (selected !== ac.correctIndex) {
+      registerMistake()
+    }
     setAnswered(true)
-  }, [selected])
+  }, [ac.correctIndex, registerInteraction, registerMistake, selected])
+
+  const handleRetry = useCallback(() => {
+    registerRetry()
+    setAnswered(false)
+    setSelected(null)
+  }, [registerRetry])
 
   const isCorrect = selected === ac.correctIndex
 
@@ -147,7 +160,7 @@ export function MultipleChoiceActivity({ activity, onComplete }: { activity: Act
           {isCorrect ? ac.feedback.success : ac.feedback.error}
           {isCorrect && (
             <motion.button
-              onClick={onComplete}
+              onClick={() => onComplete(buildCompletion({ accuracyRatio: 1 }))}
               className="btn-compact block mt-4 px-5 py-2 sm:px-6 text-xs tracking-widest uppercase border"
               style={{
                 color: '#4ade80',
@@ -158,6 +171,21 @@ export function MultipleChoiceActivity({ activity, onComplete }: { activity: Act
               whileTap={{ scale: 0.98 }}
             >
               CONTINUAR
+            </motion.button>
+          )}
+          {!isCorrect && (
+            <motion.button
+              onClick={handleRetry}
+              className="btn-compact block mt-4 px-5 py-2 sm:px-6 text-xs tracking-widest uppercase border"
+              style={{
+                color: 'rgba(239, 68, 68, 0.7)',
+                borderColor: 'rgba(239, 68, 68, 0.3)',
+                fontFamily: '"Courier New", monospace',
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              REINTENTAR
             </motion.button>
           )}
         </motion.div>

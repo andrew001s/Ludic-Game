@@ -1,6 +1,7 @@
 'use client'
 
-import type { ActivityConfig, ActivityType } from '@/types/activity'
+import type { ActivityComponentProps, ActivityConfig, ActivityType } from '@/types/activity'
+import type { ActivityCompletionMetrics } from '@/types/progress'
 import { MultipleChoiceActivity } from './MultipleChoiceActivity'
 import { DragOrderActivity } from './DragOrderActivity'
 import { FillBlanksActivity } from './FillBlanksActivity'
@@ -11,10 +12,10 @@ import { SimulatorActivity } from './SimulatorActivity'
 
 interface ActivityRendererProps {
   activity: ActivityConfig
-  onComplete: () => void
+  onComplete: (metrics: ActivityCompletionMetrics) => void
 }
 
-const registry: Record<ActivityType, React.ComponentType<{ activity: ActivityConfig; onComplete: () => void }>> = {
+const registry: Record<ActivityType, React.ComponentType<ActivityComponentProps>> = {
   'multiple-choice': MultipleChoiceActivity,
   'drag-order': DragOrderActivity,
   'fill-blanks': FillBlanksActivity,

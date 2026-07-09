@@ -1,3 +1,5 @@
+import type { ActivityCompletionMetrics } from '@/types/progress'
+
 export type ActivityType = 'multiple-choice' | 'drag-order' | 'fill-blanks' | 'slider' | 'boss-quiz' | 'robot-path' | 'simulator'
 
 export interface ActivityFeedback {
@@ -154,3 +156,8 @@ export type ActivityConfig =
   | BossQuizActivity
   | RobotPathActivity
   | SimulatorActivity
+
+export interface ActivityComponentProps<TActivity extends ActivityConfig = ActivityConfig> {
+  activity: TActivity
+  onComplete: (metrics: ActivityCompletionMetrics) => void
+}

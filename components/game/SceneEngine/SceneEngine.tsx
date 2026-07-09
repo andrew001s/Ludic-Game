@@ -13,10 +13,11 @@ import { ActivityBurst } from './ActivityBurst'
 import { NarraLeafDialoguePlayer } from '@/components/game/Dialogue/NarraLeafDialoguePlayer'
 import { Modal } from '@/components/ui/Modal'
 import { ActivityRenderer } from '@/components/game/Activities/ActivityRegistry'
+import type { ActivityCompletionMetrics } from '@/types/progress'
 
 interface SceneEngineProps {
   levelConfig: LevelConfig
-  onLevelComplete: () => void
+  onLevelComplete: (completedActivities: ActivityCompletionMetrics[]) => void
 }
 
 export function SceneEngine({ levelConfig, onLevelComplete }: SceneEngineProps) {
@@ -59,9 +60,9 @@ export function SceneEngine({ levelConfig, onLevelComplete }: SceneEngineProps) 
     if (state.phase === 'introduction') {
       actions.startExploration()
     } else if (state.phase === 'completion') {
-      onLevelComplete()
+      onLevelComplete(state.completedActivities)
     }
-  }, [state.phase, actions, onLevelComplete])
+  }, [state.completedActivities, state.phase, actions, onLevelComplete])
 
   const handleObjectClick = useCallback(
     (obj: { id: string }) => {

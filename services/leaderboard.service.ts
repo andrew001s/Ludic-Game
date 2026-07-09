@@ -20,6 +20,9 @@ function mapDocToPlayer(doc: { id: string; data(): Record<string, unknown> }): L
     score: d.score as number,
     level: d.level as number,
     completedLevels: d.completedLevels as number,
+    bestStreak: (d.bestStreak as number) ?? 0,
+    perfectActivities: (d.perfectActivities as number) ?? 0,
+    totalActivitiesCompleted: (d.totalActivitiesCompleted as number) ?? 0,
     createdAt: toMillis(d.createdAt),
     updatedAt: toMillis(d.updatedAt),
   }
@@ -55,5 +58,4 @@ export async function searchLeaderboard(filters: LeaderboardFilters): Promise<Le
   }
   return { players: players.slice(0, PAGE_SIZE), total: players.length }
 }
-
 

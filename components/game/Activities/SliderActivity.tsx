@@ -3,15 +3,17 @@
 import { useCallback, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowUp, Box, Gauge, Orbit, Ruler, Zap } from 'lucide-react'
-import type { ActivityConfig } from '@/types/activity'
+import type { ActivityComponentProps, ActivityConfig } from '@/types/activity'
+import { useActivityMetrics } from '@/hooks/useActivityMetrics'
 
-export function SliderActivity({ activity, onComplete }: { activity: ActivityConfig; onComplete: () => void }) {
+export function SliderActivity({ activity, onComplete }: ActivityComponentProps) {
   const [value, setValue] = useState<number>(0)
   const [answered, setAnswered] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const trackRef = useRef<HTMLDivElement>(null)
   const ac = activity as Extract<ActivityConfig, { type: 'slider' }>
   const isGravityHeightActivity = ac.id === 'activity-14'
+  const { buildCompletion, registerInteraction, registerMistake, registerRetry } = useActivityMetrics(ac)
 
   const range = ac.max - ac.min
   const percent = ((value - ac.min) / range) * 100
@@ -31,7 +33,7 @@ export function SliderActivity({ activity, onComplete }: { activity: ActivityCon
       const raw = ac.min + ratio * range
       return Math.round(raw / ac.step) * ac.step
     },
-    [ac.max, ac.min, ac.step, range, value],
+    [ac.min, ac.step, range, value],
   )
 
   const handlePointerDown = useCallback(
@@ -40,17 +42,19 @@ export function SliderActivity({ activity, onComplete }: { activity: ActivityCon
       e.preventDefault()
       ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
       setIsDragging(true)
+      registerInteraction()
       setValue(getValueFromClientX(e.clientX))
     },
-    [answered, getValueFromClientX],
+    [answered, getValueFromClientX, registerInteraction],
   )
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!isDragging || answered) return
+      registerInteraction()
       setValue(getValueFromClientX(e.clientX))
     },
-    [answered, getValueFromClientX, isDragging],
+    [answered, getValueFromClientX, isDragging, registerInteraction],
   )
 
   const handlePointerUp = useCallback(() => {
@@ -58,12 +62,17 @@ export function SliderActivity({ activity, onComplete }: { activity: ActivityCon
   }, [])
 
   const handleConfirm = useCallback(() => {
+    registerInteraction()
+    if (!isCorrect) {
+      registerMistake()
+    }
     setAnswered(true)
-  }, [])
+  }, [isCorrect, registerInteraction, registerMistake])
 
   const handleReset = useCallback(() => {
+    registerRetry()
     setAnswered(false)
-  }, [])
+  }, [registerRetry])
 
   return (
     <div
@@ -358,7 +367,7 @@ export function SliderActivity({ activity, onComplete }: { activity: ActivityCon
           <div className="mt-4 flex gap-3">
             {isCorrect ? (
               <motion.button
-                onClick={onComplete}
+                onClick={() => onComplete(buildCompletion({ accuracyRatio: isCorrect ? 1 : 0 }))}
                 className="btn-compact px-5 py-2 sm:px-6 text-xs tracking-widest uppercase border"
                 style={{
                   color: '#4ade80',

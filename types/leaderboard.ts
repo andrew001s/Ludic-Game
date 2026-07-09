@@ -4,6 +4,9 @@ export interface LeaderboardPlayer {
   score: number
   level: number
   completedLevels: number
+  bestStreak: number
+  perfectActivities: number
+  totalActivitiesCompleted: number
   createdAt: number
   updatedAt: number
 }

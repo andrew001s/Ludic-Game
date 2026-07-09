@@ -15,13 +15,23 @@ export interface UseGameSaveReturn {
 export function useGameSave(): UseGameSaveReturn {
   const [save, setSave] = useState<GameSave | null>(null)
 
+  const normalizeSave = useCallback((parsed: GameSave): GameSave => ({
+    ...parsed,
+    score: parsed.score ?? 0,
+    currentStreak: parsed.currentStreak ?? 0,
+    bestStreak: parsed.bestStreak ?? 0,
+    completedLevels: parsed.completedLevels ?? 0,
+    totalActivitiesCompleted: parsed.totalActivitiesCompleted ?? 0,
+    perfectActivities: parsed.perfectActivities ?? 0,
+  }), [])
+
   const loadSave = useCallback(() => {
     try {
       const raw = localStorage.getItem(SAVE_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as GameSave
         if (parsed && typeof parsed.currentLevel === 'number' && parsed.playerId) {
-          setSave(parsed)
+          setSave(normalizeSave(parsed))
           return
         }
       }
@@ -29,7 +39,7 @@ export function useGameSave(): UseGameSaveReturn {
     } catch {
       setSave(null)
     }
-  }, [])
+  }, [normalizeSave])
 
   useEffect(() => {
     // Defer loadSave to avoid calling setState synchronously within an effect
@@ -41,12 +51,13 @@ export function useGameSave(): UseGameSaveReturn {
 
   const saveGame = useCallback((data: GameSave) => {
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(data))
-      setSave(data)
+      const normalized = normalizeSave(data)
+      localStorage.setItem(SAVE_KEY, JSON.stringify(normalized))
+      setSave(normalized)
     } catch {
       // localStorage unavailable
     }
-  }, [])
+  }, [normalizeSave])
 
   const clearSave = useCallback(() => {
     try {

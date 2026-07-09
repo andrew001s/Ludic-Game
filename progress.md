@@ -33,3 +33,7 @@ Original prompt: usa estas skills para mejorar el lock indicator, que no muestre
 
 - Added reusable end-of-level feedback and transition flow in pp/game/_components/LevelPageClient.tsx with learning recap, next-destination preview, auto-advance, and fade-out.
 - Simplified all six level pages to delegate navigation and completion UX through the shared level client component.
+
+- Added a real scoring pipeline: activities now emit performance metrics (time, mistakes, retries, interactions), `lib/scoring.ts` converts them into differentiated points with streak/perfect bonuses, and level completion summarizes total score gains.
+- Extended local save + Firebase leaderboard progress with score, streaks, perfect activities, completed levels, and total activities; `services/progress.service.ts` now syncs these fields back to Firestore when a level ends.
+- Updated several activities to support retry loops and report completion metrics through `ActivityRegistry` / `useSceneEngine`, so level outros can show earned points and Firebase can persist meaningful ranking differences.

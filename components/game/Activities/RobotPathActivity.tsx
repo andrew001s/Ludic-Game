@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Bot, Cog, Gauge, Lightbulb, Sparkles, Triangle, Zap } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import type { ActivityConfig } from '@/types/activity'
+import type { ActivityComponentProps, ActivityConfig } from '@/types/activity'
+import { useActivityMetrics } from '@/hooks/useActivityMetrics'
 
 function getStepIcon(item: string): LucideIcon {
   const normalized = item.toLowerCase()
@@ -64,7 +65,7 @@ function arraysMatch(a: number[], b: number[]) {
   return a.length === b.length && a.every((value, index) => value === b[index])
 }
 
-export function RobotPathActivity({ activity, onComplete }: { activity: ActivityConfig; onComplete: () => void }) {
+export function RobotPathActivity({ activity, onComplete }: ActivityComponentProps) {
   const ac = activity as Extract<ActivityConfig, { type: 'robot-path' }>
   const isRotationMode = ac.mode === 'light-rotation' && Array.isArray(ac.nodes) && ac.nodes.length > 0
   const isMagneticCircuitMode = ac.mode === 'magnetic-circuit'
@@ -79,6 +80,8 @@ export function RobotPathActivity({ activity, onComplete }: { activity: Activity
   const [followUpSelected, setFollowUpSelected] = useState<number[]>([])
   const [followUpAnswered, setFollowUpAnswered] = useState(false)
   const dragIndexRef = useRef<number | null>(null)
+  const { buildCompletion, registerInteraction, registerMistake, registerRetry } = useActivityMetrics(ac)
+  const nodes = useMemo(() => ac.nodes ?? [], [ac.nodes])
 
   const shuffledItems = useMemo(
     () => seededShuffle(ac.items.map((_, index) => index), ac.id),
@@ -94,7 +97,6 @@ export function RobotPathActivity({ activity, onComplete }: { activity: Activity
     [ac.correctOrder, slots],
   )
 
-  const nodes = ac.nodes ?? []
   const rotationSolved = useMemo(
     () => !isRotationMode || nodes.every((node, index) => rotations[index] === node.correctRotation),
     [isRotationMode, nodes, rotations],
@@ -129,6 +131,7 @@ export function RobotPathActivity({ activity, onComplete }: { activity: Activity
   }, [answered, isCorrect])
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
+    registerInteraction()
     dragIndexRef.current = index
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', String(index))
@@ -152,6 +155,7 @@ export function RobotPathActivity({ activity, onComplete }: { activity: Activity
       return
     }
 
+    registerMistake()
     setShakeSlots((prev) => new Set(prev).add(slotIndex))
     setTimeout(() => {
       setShakeSlots((prev) => {
@@ -164,6 +168,7 @@ export function RobotPathActivity({ activity, onComplete }: { activity: Activity
 
   const handleSlotClick = (slotIndex: number) => {
     if (answered || slots[slotIndex] === null || isMagneticCircuitMode) return
+    registerInteraction()
     const next = [...slots]
     next[slotIndex] = null
     setSlots(next)
@@ -172,9 +177,11 @@ export function RobotPathActivity({ activity, onComplete }: { activity: Activity
   const handleMagneticSelect = (itemIndex: number) => {
     if (!isMagneticCircuitMode || answered) return
     if (nextMagneticSlot < 0) return
+    registerInteraction()
 
     const expectedIndex = ac.correctOrder[nextMagneticSlot]
     if (itemIndex !== expectedIndex) {
+      registerMistake()
       setWrongItemIndex(itemIndex)
       window.setTimeout(() => {
         setWrongItemIndex((current) => (current === itemIndex ? null : current))
@@ -193,17 +200,20 @@ export function RobotPathActivity({ activity, onComplete }: { activity: Activity
 
   const handleRotateNode = (index: number) => {
     if (!isRotationMode || answered) return
+    registerInteraction()
     setRotations((prev) => prev.map((value, nodeIndex) => (nodeIndex === index ? (value + 90) % 360 : value)))
   }
 
   const handleFollowUpToggle = (index: number) => {
     if (!showFollowUp || followUpAnswered || answered) return
+    registerInteraction()
     setFollowUpSelected((prev) =>
       prev.includes(index) ? prev.filter((value) => value !== index) : [...prev, index],
     )
   }
 
   const handleReset = () => {
+    registerRetry()
     setSlots([null, null, null, null])
     setShakeSlots(new Set())
     setWrongItemIndex(null)
@@ -218,12 +228,20 @@ export function RobotPathActivity({ activity, onComplete }: { activity: Activity
   const handleConfirm = () => {
     if (isRotationMode) {
       if (!canConfirmRotation) return
+      registerInteraction()
+      if (!followUpSolved) {
+        registerMistake()
+      }
       setFollowUpAnswered(true)
       setAnswered(true)
       return
     }
 
     if (!isFilled) return
+    registerInteraction()
+    if (!orderSolved) {
+      registerMistake()
+    }
     setAnswered(true)
   }
 
@@ -721,7 +739,21 @@ export function RobotPathActivity({ activity, onComplete }: { activity: Activity
             {isCorrect ? ac.feedback.success : ac.feedback.error}
             {isCorrect && (
               <motion.button
-                onClick={onComplete}
+                onClick={() =>
+                  onComplete(
+                    buildCompletion({
+                      accuracyRatio:
+                        isRotationMode && ac.followUpCorrectIndices
+                          ? ac.followUpCorrectIndices.length > 0
+                            ? followUpSelected.filter((index) => ac.followUpCorrectIndices?.includes(index)).length /
+                              ac.followUpCorrectIndices.length
+                            : 1
+                          : isCorrect
+                            ? 1
+                            : 0,
+                    }),
+                  )
+                }
                 className="btn-compact block mt-4 px-5 py-2 sm:px-6 text-xs tracking-widest uppercase border"
                 style={{ color: '#4ade80', borderColor: 'rgba(74, 222, 128, 0.3)' }}
                 whileHover={{ scale: 1.02 }}

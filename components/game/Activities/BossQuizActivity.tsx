@@ -3,7 +3,8 @@
 import { useState, useCallback, useEffect, useRef, useReducer } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Timer, Trophy, XCircle, Zap } from 'lucide-react'
-import type { ActivityConfig, BossQuizQuestion } from '@/types/activity'
+import type { ActivityComponentProps, ActivityConfig, BossQuizQuestion } from '@/types/activity'
+import { useActivityMetrics } from '@/hooks/useActivityMetrics'
 
 function QuestionCard({
   question,
@@ -130,9 +131,10 @@ function QuestionCard({
   )
 }
 
-export function BossQuizActivity({ activity, onComplete }: { activity: ActivityConfig; onComplete: () => void }) {
+export function BossQuizActivity({ activity, onComplete }: ActivityComponentProps) {
   const ac = activity as Extract<ActivityConfig, { type: 'boss-quiz' }>
   const totalQuestions = ac.questions.length
+  const { buildCompletion, registerRetry } = useActivityMetrics(ac)
 
   type State = { currentQ: number; results: boolean[]; finished: boolean }
   const [state, dispatch] = useReducer(
@@ -221,7 +223,15 @@ export function BossQuizActivity({ activity, onComplete }: { activity: ActivityC
           <div className="flex gap-3 mt-4">
             {passed ? (
               <motion.button
-                onClick={onComplete}
+                onClick={() =>
+                  onComplete(
+                    buildCompletion({
+                      accuracyRatio: totalQuestions > 0 ? correctCount / totalQuestions : 1,
+                      mistakes: totalQuestions - correctCount,
+                      interactions: totalQuestions,
+                    }),
+                  )
+                }
                 className="btn-compact px-5 py-2 sm:px-6 text-xs tracking-widest uppercase border"
                 style={{
                   color: '#4ade80',
@@ -234,7 +244,10 @@ export function BossQuizActivity({ activity, onComplete }: { activity: ActivityC
               </motion.button>
             ) : (
               <motion.button
-                onClick={() => dispatch({ type: 'retry' })}
+                onClick={() => {
+                  registerRetry()
+                  dispatch({ type: 'retry' })
+                }}
                 className="btn-compact px-5 py-2 sm:px-6 text-xs tracking-widest uppercase border"
                 style={{
                   color: 'rgba(239, 68, 68, 0.7)',

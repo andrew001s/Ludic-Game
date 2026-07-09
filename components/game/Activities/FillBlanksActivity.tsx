@@ -3,7 +3,8 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowUp, CircleDot, MoveUpRight, Orbit, Weight } from 'lucide-react'
-import type { ActivityConfig } from '@/types/activity'
+import type { ActivityComponentProps, ActivityConfig } from '@/types/activity'
+import { useActivityMetrics } from '@/hooks/useActivityMetrics'
 
 interface DragInfo {
   point: {
@@ -37,7 +38,7 @@ function getSeededShuffle(words: string[], seed: string) {
   return values
 }
 
-export function FillBlanksActivity({ activity, onComplete }: { activity: ActivityConfig; onComplete: () => void }) {
+export function FillBlanksActivity({ activity, onComplete }: ActivityComponentProps) {
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [answered, setAnswered] = useState(false)
   const [selectedWord, setSelectedWord] = useState<string | null>(null)
@@ -47,35 +48,40 @@ export function FillBlanksActivity({ activity, onComplete }: { activity: Activit
   const targetRef = useRef<HTMLDivElement>(null)
   const ac = activity as Extract<ActivityConfig, { type: 'fill-blanks' }>
   const isSphereActivity = ac.id === 'activity-11'
+  const { buildCompletion, registerInteraction, registerMistake, registerRetry } = useActivityMetrics(ac)
 
   const handleChange = useCallback(
     (index: number, value: string) => {
       if (answered) return
+      registerInteraction()
       setAnswers((prev) => ({ ...prev, [index]: value }))
     },
-    [answered],
+    [answered, registerInteraction],
   )
 
   const handleWordSelect = useCallback(
     (word: string) => {
       if (answered || !sphereElevated) return
+      registerInteraction()
       setSelectedWord((prev) => (prev === word ? null : word))
     },
-    [answered, sphereElevated],
+    [answered, registerInteraction, sphereElevated],
   )
 
   const handleBlankSelect = useCallback(
     (index: number) => {
       if (answered || !sphereElevated || !selectedWord) return
+      registerInteraction()
       setAnswers((prev) => ({ ...prev, [index]: selectedWord }))
       setSelectedWord(null)
     },
-    [answered, selectedWord, sphereElevated],
+    [answered, registerInteraction, selectedWord, sphereElevated],
   )
 
   const handleBlankClear = useCallback(
     (index: number) => {
       if (answered) return
+      registerInteraction()
       setAnswers((prev) => {
         const next = { ...prev }
         delete next[index]
@@ -83,14 +89,26 @@ export function FillBlanksActivity({ activity, onComplete }: { activity: Activit
       })
       setSelectedWord(null)
     },
-    [answered],
+    [answered, registerInteraction],
   )
 
   const handleConfirm = useCallback(() => {
     if (isSphereActivity && !sphereElevated) return
     if (Object.keys(answers).length !== ac.blanks.length) return
+    registerInteraction()
+    const correct = ac.blanks.every(
+      (blank) => answers[blank.index]?.trim().toLowerCase() === ac.correctAnswers[blank.index].toLowerCase(),
+    )
+    if (!correct) {
+      registerMistake()
+    }
     setAnswered(true)
-  }, [ac.blanks.length, answers, isSphereActivity, sphereElevated])
+  }, [ac.blanks, ac.correctAnswers, answers, isSphereActivity, registerInteraction, registerMistake, sphereElevated])
+
+  const handleRetry = useCallback(() => {
+    registerRetry()
+    setAnswered(false)
+  }, [registerRetry])
 
   const isCorrect = useMemo(() => {
     if (!answered) return false
@@ -402,7 +420,7 @@ export function FillBlanksActivity({ activity, onComplete }: { activity: Activit
           {isCorrect ? ac.feedback.success : ac.feedback.error}
           {isCorrect && (
             <motion.button
-              onClick={onComplete}
+              onClick={() => onComplete(buildCompletion({ accuracyRatio: 1 }))}
               className="btn-compact block mt-4 px-5 py-2 sm:px-6 text-xs tracking-widest uppercase border"
               style={{
                 color: '#4ade80',
@@ -412,6 +430,20 @@ export function FillBlanksActivity({ activity, onComplete }: { activity: Activit
               whileHover={{ scale: 1.02 }}
             >
               CONTINUAR
+            </motion.button>
+          )}
+          {!isCorrect && (
+            <motion.button
+              onClick={handleRetry}
+              className="btn-compact block mt-4 px-5 py-2 sm:px-6 text-xs tracking-widest uppercase border"
+              style={{
+                color: 'rgba(239, 68, 68, 0.7)',
+                borderColor: 'rgba(239, 68, 68, 0.3)',
+                fontFamily: '"Courier New", monospace',
+              }}
+              whileHover={{ scale: 1.02 }}
+            >
+              REINTENTAR
             </motion.button>
           )}
         </motion.div>

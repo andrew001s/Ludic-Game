@@ -46,6 +46,12 @@ export function MainMenu() {
         playerId: result.id,
         playerName: result.playerName,
         currentLevel: 1,
+        score: 0,
+        currentStreak: 0,
+        bestStreak: 0,
+        completedLevels: 0,
+        totalActivitiesCompleted: 0,
+        perfectActivities: 0,
       })
       setTimeout(() => setFlow('story'), 500)
     },

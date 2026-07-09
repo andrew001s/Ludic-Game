@@ -3,7 +3,8 @@
 import { useCallback, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
-import type { ActivityConfig } from '@/types/activity'
+import type { ActivityComponentProps, ActivityConfig } from '@/types/activity'
+import { useActivityMetrics } from '@/hooks/useActivityMetrics'
 import { getSeededOrder, resolveDragOrderItem } from './dragOrder.shared'
 
 function getDefaultEmptyMessage(activity: Extract<ActivityConfig, { type: 'drag-order' }>, isGuided: boolean) {
@@ -18,13 +19,14 @@ function getDefaultEmptyMessage(activity: Extract<ActivityConfig, { type: 'drag-
   return 'Selecciona las piezas para completar la secuencia.'
 }
 
-export function DragOrderActivity({ activity, onComplete }: { activity: ActivityConfig; onComplete: () => void }) {
+export function DragOrderActivity({ activity, onComplete }: ActivityComponentProps) {
   const ac = activity as Extract<ActivityConfig, { type: 'drag-order' }>
   const isGuided = ac.interactionMode === 'guided'
   const [order, setOrder] = useState<number[]>([])
   const [answered, setAnswered] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [statusTone, setStatusTone] = useState<'info' | 'success' | 'error'>('info')
+  const { buildCompletion, registerInteraction, registerMistake, registerRetry } = useActivityMetrics(ac)
 
   const itemDetails = useMemo(
     () => ac.items.map((_, index) => resolveDragOrderItem(ac, index, index)),
@@ -39,11 +41,13 @@ export function DragOrderActivity({ activity, onComplete }: { activity: Activity
   const handleSelectItem = useCallback(
     (index: number) => {
       if (answered) return
+      registerInteraction()
 
       if (isGuided) {
         const expectedIndex = ac.correctOrder[order.length]
 
         if (index !== expectedIndex) {
+          registerMistake()
           setStatusTone('error')
           setStatusMessage(ac.stepHints?.[order.length] ?? 'Esa pieza todavia no sigue en la secuencia.')
           return
@@ -59,30 +63,45 @@ export function DragOrderActivity({ activity, onComplete }: { activity: Activity
         setAnswered(true)
       }
     },
-    [ac, answered, isGuided, order.length],
+    [ac, answered, isGuided, order, registerInteraction, registerMistake],
   )
 
   const handleRemoveItem = useCallback(
     (position: number) => {
       if (answered) return
+      registerInteraction()
       setOrder((prev) => prev.filter((_, index) => index !== position))
       setStatusTone('info')
       setStatusMessage('Quitamos esa pieza. Reajusta la secuencia desde ese punto.')
     },
-    [answered],
+    [answered, registerInteraction],
   )
 
   const handleReset = useCallback(() => {
     if (answered) return
+    registerRetry()
     setOrder([])
     setStatusTone('info')
     setStatusMessage('Secuencia reiniciada. Empecemos otra vez.')
-  }, [answered])
+  }, [answered, registerRetry])
 
   const handleConfirm = useCallback(() => {
     if (order.length !== ac.items.length) return
+    registerInteraction()
+    const correct = order.every((itemIndex, index) => itemIndex === ac.correctOrder[index])
+    if (!correct) {
+      registerMistake()
+    }
     setAnswered(true)
-  }, [ac.items.length, order.length])
+  }, [ac.correctOrder, ac.items.length, order, registerInteraction, registerMistake])
+
+  const handleRetry = useCallback(() => {
+    registerRetry()
+    setAnswered(false)
+    setOrder([])
+    setStatusTone('info')
+    setStatusMessage('Secuencia reiniciada. Intenta detectar mejor el flujo de energia.')
+  }, [registerRetry])
 
   const isCorrect = useMemo(
     () => answered && order.every((itemIndex, index) => itemIndex === ac.correctOrder[index]),
@@ -393,7 +412,7 @@ export function DragOrderActivity({ activity, onComplete }: { activity: Activity
           {isCorrect ? ac.feedback.success : ac.feedback.error}
           {isCorrect && (
             <motion.button
-              onClick={onComplete}
+              onClick={() => onComplete(buildCompletion({ accuracyRatio: isCorrect ? 1 : 0 }))}
               className="btn-compact block mt-4 px-5 py-2 sm:px-6 text-xs tracking-widest uppercase border"
               style={{
                 color: '#4ade80',
@@ -403,6 +422,20 @@ export function DragOrderActivity({ activity, onComplete }: { activity: Activity
               whileHover={{ scale: 1.02 }}
             >
               CONTINUAR
+            </motion.button>
+          )}
+          {!isCorrect && (
+            <motion.button
+              onClick={handleRetry}
+              className="btn-compact block mt-4 px-5 py-2 sm:px-6 text-xs tracking-widest uppercase border"
+              style={{
+                color: 'rgba(239, 68, 68, 0.7)',
+                borderColor: 'rgba(239, 68, 68, 0.3)',
+                fontFamily: '"Courier New", monospace',
+              }}
+              whileHover={{ scale: 1.02 }}
+            >
+              REINTENTAR
             </motion.button>
           )}
         </motion.div>

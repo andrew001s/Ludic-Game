@@ -3,11 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, CheckCircle2, FlaskConical, Lightbulb, Orbit, ShieldCheck, Sparkles, Zap } from 'lucide-react'
+import { ArrowRight, CheckCircle2, FlaskConical, Lightbulb, Orbit, ShieldCheck, Sparkles, Star, TimerReset, Trophy, Zap } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { SceneEngine } from '@/components/game/SceneEngine/SceneEngine'
 import { getLevelConfig } from '@/services/level.service'
 import { useGameSave } from '@/hooks/useGameSave'
+import { getActivityConfig } from '@/services/activity.service'
+import { calculateActivityPerformance, summarizeLevelScore } from '@/lib/scoring'
+import { syncPlayerLevelProgress } from '@/services/progress.service'
+import type { ActivityCompletionMetrics, LevelScoreSummary } from '@/types/progress'
 
 type OutroTone = {
   accent: string
@@ -73,6 +77,8 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
   const { save, saveGame } = useGameSave()
   const [showOutro, setShowOutro] = useState(false)
   const [isLeaving, setIsLeaving] = useState(false)
+  const [levelSummary, setLevelSummary] = useState<LevelScoreSummary | null>(null)
+  const [syncError, setSyncError] = useState<string | null>(null)
   const levelConfig = getLevelConfig(levelId)
 
   const nextLevelConfig = useMemo(
@@ -91,11 +97,6 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
     setIsLeaving(true)
     const nextId = levelConfig.nextLevel
 
-    saveGame({
-      ...save,
-      currentLevel: nextId ? parseInt(nextId.replace('level-', '')) : save.currentLevel,
-    })
-
     window.setTimeout(() => {
       if (nextId) {
         router.push(`/game/${nextId}`)
@@ -103,7 +104,7 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
         router.push('/')
       }
     }, 850)
-  }, [isLeaving, levelConfig, router, save, saveGame])
+  }, [isLeaving, levelConfig, router, save])
 
   useEffect(() => {
     if (!showOutro || isLeaving) return
@@ -115,10 +116,74 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
     return () => window.clearTimeout(timer)
   }, [showOutro, isLeaving, completeAndNavigate])
 
-  const handleLevelComplete = useCallback(() => {
+  const handleLevelComplete = useCallback(async (completedActivities: ActivityCompletionMetrics[]) => {
     if (!save) return
+    if (!levelConfig) return
+
+    const previousProgress = {
+      score: save.score ?? 0,
+      currentStreak: save.currentStreak ?? 0,
+      bestStreak: save.bestStreak ?? 0,
+      completedLevels: save.completedLevels ?? 0,
+      totalActivitiesCompleted: save.totalActivitiesCompleted ?? 0,
+      perfectActivities: save.perfectActivities ?? 0,
+    }
+
+    const performances = completedActivities.reduce<ReturnType<typeof calculateActivityPerformance>[]>((acc, metrics) => {
+      const activity = getActivityConfig(metrics.activityId)
+      if (!activity) return acc
+
+      const rollingProgress =
+        acc.length === 0
+          ? previousProgress
+          : {
+              score: previousProgress.score + acc.reduce((total, performance) => total + performance.score, 0),
+              currentStreak: acc[acc.length - 1].streakAfter,
+              bestStreak: Math.max(previousProgress.bestStreak, ...acc.map((performance) => performance.streakAfter)),
+              completedLevels: previousProgress.completedLevels,
+              totalActivitiesCompleted: previousProgress.totalActivitiesCompleted + acc.length,
+              perfectActivities: previousProgress.perfectActivities + acc.filter((performance) => performance.perfect).length,
+            }
+
+      acc.push(calculateActivityPerformance(activity, metrics, rollingProgress))
+      return acc
+    }, [])
+
+    const summary = summarizeLevelScore({
+      levelId: levelConfig.id,
+      performances,
+      previous: previousProgress,
+    })
+
+    const nextLevel = levelConfig.nextLevel ? parseInt(levelConfig.nextLevel.replace('level-', '')) : save.currentLevel
+
+    saveGame({
+      ...save,
+      currentLevel: nextLevel,
+      score: summary.score,
+      currentStreak: summary.currentStreak,
+      bestStreak: summary.bestStreak,
+      completedLevels: summary.completedLevels,
+      totalActivitiesCompleted: summary.totalActivitiesCompleted,
+      perfectActivities: summary.perfectActivities,
+      lastSavedAt: Date.now(),
+    })
+
+    setLevelSummary(summary)
     setShowOutro(true)
-  }, [save])
+    setSyncError(null)
+
+    try {
+      await syncPlayerLevelProgress({
+        playerId: save.playerId,
+        nextLevel,
+        summary,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo sincronizar el progreso con Firebase.'
+      setSyncError(message)
+    }
+  }, [levelConfig, save, saveGame])
 
   if (!levelConfig || !outroTone) {
     return (
@@ -185,6 +250,18 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
                     <p className="max-w-xl text-sm sm:text-base leading-relaxed" style={{ color: 'rgba(220, 252, 231, 0.82)' }}>
                       {outroTone.insight}
                     </p>
+                    {levelSummary && (
+                      <div className="mt-3 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em]">
+                        <span className="inline-flex items-center gap-2 border px-3 py-2" style={{ borderColor: `${outroTone.accent}33`, color: '#fef08a', backgroundColor: 'rgba(250, 204, 21, 0.08)' }}>
+                          <Trophy size={13} aria-hidden="true" />
+                          +{levelSummary.earnedScore} puntos
+                        </span>
+                        <span className="inline-flex items-center gap-2 border px-3 py-2" style={{ borderColor: `${outroTone.accent}33`, color: '#d9f99d', backgroundColor: 'rgba(134, 239, 172, 0.08)' }}>
+                          <Star size={13} aria-hidden="true" />
+                          Racha {levelSummary.currentStreak}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -216,6 +293,7 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
                     <li>- Completaste {levelConfig.interactiveObjects.length} desafios del sector.</li>
                     <li>- Reforzaste una forma clave de transformacion energetica.</li>
                     <li>- Dejaste el laboratorio listo para seguir avanzando.</li>
+                    {levelSummary && <li>- Sumaste {levelSummary.perfectCount} actividades perfectas en este nivel.</li>}
                   </ul>
                 </div>
 
@@ -242,6 +320,55 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
                   </p>
                 </div>
               </div>
+
+              {levelSummary && (
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-sm border p-3" style={{ borderColor: 'rgba(74, 222, 128, 0.14)', backgroundColor: 'rgba(74, 222, 128, 0.04)' }}>
+                    <div className="mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em]" style={{ color: 'rgba(223, 233, 174, 0.45)' }}>
+                      <Trophy size={13} aria-hidden="true" />
+                      Puntuacion
+                    </div>
+                    <div className="text-xl font-bold" style={{ color: '#fef08a' }}>
+                      {levelSummary.score.toLocaleString()}
+                    </div>
+                    <div className="text-[11px]" style={{ color: 'rgba(220, 252, 231, 0.62)' }}>
+                      Total acumulado
+                    </div>
+                  </div>
+
+                  <div className="rounded-sm border p-3" style={{ borderColor: 'rgba(74, 222, 128, 0.14)', backgroundColor: 'rgba(74, 222, 128, 0.04)' }}>
+                    <div className="mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em]" style={{ color: 'rgba(223, 233, 174, 0.45)' }}>
+                      <Star size={13} aria-hidden="true" />
+                      Cadena perfecta
+                    </div>
+                    <div className="text-xl font-bold" style={{ color: '#d9f99d' }}>
+                      {levelSummary.perfectCount}/{levelSummary.activityCount}
+                    </div>
+                    <div className="text-[11px]" style={{ color: 'rgba(220, 252, 231, 0.62)' }}>
+                      Actividades sin errores
+                    </div>
+                  </div>
+
+                  <div className="rounded-sm border p-3" style={{ borderColor: 'rgba(74, 222, 128, 0.14)', backgroundColor: 'rgba(74, 222, 128, 0.04)' }}>
+                    <div className="mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em]" style={{ color: 'rgba(223, 233, 174, 0.45)' }}>
+                      <TimerReset size={13} aria-hidden="true" />
+                      Bonus
+                    </div>
+                    <div className="text-xl font-bold" style={{ color: '#86efac' }}>
+                      +{(levelSummary.levelBonus + levelSummary.perfectChainBonus).toLocaleString()}
+                    </div>
+                    <div className="text-[11px]" style={{ color: 'rgba(220, 252, 231, 0.62)' }}>
+                      Sector + cadena
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {syncError && (
+                <div className="mt-4 rounded-sm border px-4 py-3 text-xs leading-relaxed" style={{ borderColor: 'rgba(251, 146, 60, 0.3)', backgroundColor: 'rgba(154, 52, 18, 0.12)', color: '#fdba74' }}>
+                  El progreso se guardó localmente, pero Firebase no respondió: {syncError}
+                </div>
+              )}
 
               <div className="mt-6 space-y-3">
                 <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(223, 233, 174, 0.42)' }}>

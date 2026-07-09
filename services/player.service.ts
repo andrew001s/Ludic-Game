@@ -12,6 +12,10 @@ export async function createPlayer(data: CreatePlayerData): Promise<PlayerResult
     score: 0,
     level: 1,
     completedLevels: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    totalActivitiesCompleted: 0,
+    perfectActivities: 0,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
