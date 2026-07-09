@@ -12,6 +12,7 @@ import { getActivityConfig } from '@/services/activity.service'
 import { calculateActivityPerformance, summarizeLevelScore } from '@/lib/scoring'
 import { syncPlayerLevelProgress } from '@/services/progress.service'
 import type { ActivityCompletionMetrics, LevelScoreSummary } from '@/types/progress'
+import { Modal } from '@/components/ui/Modal'
 
 type OutroTone = {
   accent: string
@@ -77,6 +78,7 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
   const { save, saveGame } = useGameSave()
   const [showOutro, setShowOutro] = useState(false)
   const [isLeaving, setIsLeaving] = useState(false)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [levelSummary, setLevelSummary] = useState<LevelScoreSummary | null>(null)
   const [syncError, setSyncError] = useState<string | null>(null)
   const levelConfig = getLevelConfig(levelId)
@@ -105,6 +107,11 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
       }
     }, 850)
   }, [isLeaving, levelConfig, router, save])
+
+  const handleConfirmExit = useCallback(() => {
+    setShowExitConfirm(false)
+    router.push('/')
+  }, [router])
 
   useEffect(() => {
     if (!showOutro || isLeaving) return
@@ -202,7 +209,62 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
 
   return (
     <>
-      <SceneEngine levelConfig={levelConfig} onLevelComplete={handleLevelComplete} />
+      <SceneEngine
+        levelConfig={levelConfig}
+        score={save?.score ?? 0}
+        onRequestExit={() => setShowExitConfirm(true)}
+        onLevelComplete={handleLevelComplete}
+      />
+
+      <Modal
+        isOpen={showExitConfirm}
+        onClose={() => setShowExitConfirm(false)}
+        title="CONFIRMAR SALIDA"
+        ariaLabel="Confirmar salida al menu principal"
+      >
+        <div className="flex h-full flex-col justify-between gap-6" style={{ fontFamily: '"Courier New", monospace' }}>
+          <div className="space-y-4">
+            <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#d9f99d' }}>
+              ¿Seguro que quieres volver al menú principal?
+            </p>
+            <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'rgba(220, 252, 231, 0.72)' }}>
+              Tu progreso actual ya quedó guardado localmente. Si estás en medio de un desafío, tendrás que retomarlo desde el nivel.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <motion.button
+              type="button"
+              onClick={handleConfirmExit}
+              className="px-5 py-2 text-xs tracking-[0.22em] uppercase border"
+              style={{
+                color: '#fca5a5',
+                borderColor: 'rgba(248, 113, 113, 0.42)',
+                backgroundColor: 'rgba(127, 29, 29, 0.14)',
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Sí, salir
+            </motion.button>
+
+            <motion.button
+              type="button"
+              onClick={() => setShowExitConfirm(false)}
+              className="px-5 py-2 text-xs tracking-[0.22em] uppercase border"
+              style={{
+                color: '#d9f99d',
+                borderColor: 'rgba(134, 239, 172, 0.3)',
+                backgroundColor: 'rgba(21, 128, 61, 0.08)',
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Seguir jugando
+            </motion.button>
+          </div>
+        </div>
+      </Modal>
 
       <AnimatePresence>
         {showOutro && (

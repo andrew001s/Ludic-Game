@@ -8,6 +8,7 @@ import { MenuButton } from '@/components/ui/MenuButton'
 import { Modal } from '@/components/ui/Modal'
 import { GameLogo } from '@/components/game/GameLogo'
 import { Footer } from '@/components/game/Footer'
+import { MusicVolumeSlider } from '@/components/game/MusicVolumeSlider'
 import { useGameSave } from '@/hooks/useGameSave'
 import { useAudio } from '@/hooks/useAudio'
 import { PlayerNameModal } from '@/components/game/GameModal/PlayerNameModal'
@@ -107,6 +108,10 @@ export function MainMenu() {
 
   return (
     <>
+      <div className="fixed top-4 right-4 z-30">
+        <MusicVolumeSlider />
+      </div>
+
       <div className="fixed inset-0 flex flex-col justify-center px-8 sm:px-12 md:px-16 lg:px-20 xl:px-24">
         <div className="flex flex-col items-start gap-12 max-w-lg">
           <GameLogo />

@@ -28,6 +28,46 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.music-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1px solid rgba(163, 230, 53, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+}
+
+.music-volume-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.music-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
+  border: 2px solid #d9f99d;
+  border-radius: 999px;
+  background: #84cc16;
+  box-shadow: 0 0 0 2px rgba(5, 8, 5, 0.9);
+}
+
+.music-volume-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.music-volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #d9f99d;
+  border-radius: 999px;
+  background: #84cc16;
+  box-shadow: 0 0 0 2px rgba(5, 8, 5, 0.9);
+}
+
 ::selection {
   background-color: rgba(74, 222, 128, 0.3);
   color: #f0fdf4;

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 type SfxType = 'hover' | 'click' | 'confirm' | 'back'
 export type MusicTrack =
@@ -28,6 +28,8 @@ const MUSIC_TRACKS: Record<MusicTrack, string> = {
   'level-6': '/music/level6.mp3',
 }
 
+const MUSIC_VOLUME_KEY = 'guardianes-music-volume'
+const DEFAULT_MUSIC_VOLUME = 0.4
 // Module-level singletons — shared across all hook instances
 let ctx: AudioContext | null = null
 let music: HTMLAudioElement | null = null
@@ -35,6 +37,38 @@ let isPlaying = false
 let instanceCount = 0
 let retryListenerAttached = false
 let currentTrack: MusicTrack = 'menu'
+let currentMusicVolume = DEFAULT_MUSIC_VOLUME
+const volumeListeners = new Set<(volume: number) => void>()
+
+function notifyVolumeListeners() {
+  for (const listener of volumeListeners) {
+    listener(currentMusicVolume)
+  }
+}
+
+function persistMusicVolume() {
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(MUSIC_VOLUME_KEY, String(currentMusicVolume))
+    }
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function readStoredMusicVolume() {
+  try {
+    if (typeof window === 'undefined') return
+    const raw = window.localStorage.getItem(MUSIC_VOLUME_KEY)
+    if (!raw) return
+    const parsed = Number(raw)
+    if (!Number.isNaN(parsed)) {
+      currentMusicVolume = Math.max(0, Math.min(1, parsed))
+    }
+  } catch {
+    // ignore storage failures
+  }
+}
 
 function getCtx(): AudioContext {
   if (!ctx) {
@@ -63,11 +97,13 @@ function playNote(freq: number, duration: number, type: OscillatorType = 'square
 }
 
 export function useAudio() {
+  const [musicVolume, setMusicVolumeState] = useState(currentMusicVolume)
+
   const ensureMusic = useCallback((track: MusicTrack = currentTrack) => {
     if (!music) {
       music = new Audio(MUSIC_TRACKS[track])
       music.loop = true
-      music.volume = 0.4
+      music.volume = currentMusicVolume
     }
     return music
   }, [])
@@ -85,6 +121,7 @@ export function useAudio() {
 
     if (isPlaying) return
     isPlaying = true
+    player.volume = currentMusicVolume
     player.currentTime = 0
     player.play().catch(() => {
       isPlaying = false
@@ -147,6 +184,7 @@ export function useAudio() {
 
   const initAudio = useCallback(async () => {
     try {
+      readStoredMusicVolume()
       const c = getCtx()
       if (c.state === 'suspended') await c.resume()
     } catch {
@@ -182,5 +220,34 @@ export function useAudio() {
     }
   }, [initAudio, startMusic, stopMusic])
 
-  return { playSFX, initAudio, startMusic, stopMusic, setMusicTrack }
+  useEffect(() => {
+    const listener = (volume: number) => setMusicVolumeState(volume)
+    volumeListeners.add(listener)
+    listener(currentMusicVolume)
+
+    return () => {
+      volumeListeners.delete(listener)
+    }
+  }, [])
+
+  const setMusicVolume = useCallback(
+    (nextVolume: number) => {
+      currentMusicVolume = Math.max(0, Math.min(1, nextVolume))
+      const player = ensureMusic(currentTrack)
+      player.volume = currentMusicVolume
+      persistMusicVolume()
+      notifyVolumeListeners()
+    },
+    [ensureMusic],
+  )
+
+  return {
+    playSFX,
+    initAudio,
+    startMusic,
+    stopMusic,
+    setMusicTrack,
+    musicVolume,
+    setMusicVolume,
+  }
 }

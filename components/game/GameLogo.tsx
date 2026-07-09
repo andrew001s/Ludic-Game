@@ -20,7 +20,7 @@ export function GameLogo() {
           imageRendering: "pixelated",
         }}
       >
-        NEXUS Ω
+        NEXUSΩ
       </h1>
       <motion.p
         className="text-xs sm:text-sm tracking-[0.3em] uppercase text-green-600/70 ml-1"
