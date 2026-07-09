@@ -221,8 +221,9 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
         onClose={() => setShowExitConfirm(false)}
         title="CONFIRMAR SALIDA"
         ariaLabel="Confirmar salida al menu principal"
+        compact
       >
-        <div className="flex h-full flex-col justify-between gap-6" style={{ fontFamily: '"Courier New", monospace' }}>
+        <div className="flex flex-col justify-between gap-6" style={{ fontFamily: '"Courier New", monospace' }}>
           <div className="space-y-4">
             <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#d9f99d' }}>
               ¿Seguro que quieres volver al menú principal?

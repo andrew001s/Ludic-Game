@@ -10,9 +10,10 @@ interface ModalProps {
   title: string
   children: ReactNode
   ariaLabel?: string
+  compact?: boolean
 }
 
-export function Modal({ isOpen, onClose, title, children, ariaLabel }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, ariaLabel, compact = false }: ModalProps) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -49,7 +50,11 @@ export function Modal({ isOpen, onClose, title, children, ariaLabel }: ModalProp
             role="dialog"
             aria-modal="true"
             aria-label={ariaLabel ?? title}
-            className="modal-compact relative w-[92vw] sm:w-[80vw] h-[85vh] sm:h-[80vh] max-w-5xl max-h-[900px] overflow-hidden border-[3px] border-[#786544] bg-[#0f0d09] shadow-[0_24px_80px_rgba(0,0,0,0.9)]"
+            className={`relative overflow-hidden border-[3px] border-[#786544] bg-[#0f0d09] shadow-[0_24px_80px_rgba(0,0,0,0.9)] ${
+              compact
+                ? 'w-auto min-w-[280px] max-w-[420px]'
+                : 'w-[92vw] sm:w-[80vw] h-[85vh] sm:h-[80vh] max-w-5xl max-h-[900px]'
+            }`}
             style={{
               imageRendering: 'pixelated',
               backgroundImage:
