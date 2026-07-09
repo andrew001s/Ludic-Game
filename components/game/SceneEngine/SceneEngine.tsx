@@ -104,52 +104,59 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
         ))}
       </div>
 
-      {/* Top bar with level info */}
-      <div className="absolute top-0 left-0 right-0 z-30 p-3 sm:p-4">
-        <div className="max-w-6xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <span
-              className="text-[10px] tracking-[0.25em] uppercase"
-              style={{ color: 'rgba(223, 233, 174, 0.55)', fontFamily: '"Courier New", monospace', textShadow: '1px 1px 0 #050603' }}
-            >
-              {levelConfig.id.replace('-', ' ').toUpperCase()}
-            </span>
-            <span
-              className="text-[10px] tracking-widest uppercase"
-              style={{ color: 'rgba(183, 209, 103, 0.45)', fontFamily: '"Courier New", monospace', textShadow: '1px 1px 0 #050603' }}
-            >
-              {levelConfig.title}
-            </span>
+      {/* Score — top-left corner */}
+      <div className="absolute top-0 left-0 z-30 p-3 sm:p-4">
+         <div
+            className="inline-flex items-center gap-2 border px-3 py-2 text-[10px] uppercase tracking-[0.18em]"
+            style={{
+              borderColor: 'rgba(250, 204, 21, 0.34)',
+              color: '#fef08a',
+              backgroundColor: 'rgba(35, 22, 4, 0.52)',
+              fontFamily: '"Courier New", monospace',
+              textShadow: '1px 1px 0 #050603',
+            }}
+          >
+            <Trophy size={14} aria-hidden="true" />
+            <span>Score: {score.toLocaleString()}</span>
           </div>
+        
+      </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-            <div
-              className="inline-flex items-center gap-2 border px-3 py-2 text-[10px] uppercase tracking-[0.18em]"
-              style={{
-                borderColor: 'rgba(250, 204, 21, 0.34)',
-                color: '#fef08a',
-                backgroundColor: 'rgba(35, 22, 4, 0.52)',
-                fontFamily: '"Courier New", monospace',
-                textShadow: '1px 1px 0 #050603',
-              }}
-            >
-              <Trophy size={14} aria-hidden="true" />
-              <span>Score: {score.toLocaleString()}</span>
-            </div>
-
-            <MusicVolumeSlider />
-
-            <GameIconButton
-              icon={DoorOpen}
-              label="Salir"
-              tone="warning"
-              onClick={() => {
-                playSFX('back')
-                onRequestExit()
-              }}
-            />
-          </div>
+      <div className="absolute top-0 left-1/2 z-30 p-3 sm:p-4 -translate-x-1/2">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <span
+            className="text-[18px] tracking-[0.25em] uppercase"
+            style={{ color: 'rgba(223, 233, 174, 0.8)', fontFamily: '"Courier New", monospace', textShadow: '1px 1px 2px #050603' }}
+          >
+            {levelConfig.id.replace('-', ' ').toUpperCase()}
+          </span>
+          <span
+            className="text-[18px] tracking-widest uppercase"
+            style={{ color: 'rgba(183, 209, 103, 0.75)', fontFamily: '"Courier New", monospace', textShadow: '1px 1px 2px #050603' }}
+          >
+            {levelConfig.title}
+          </span>
+         
         </div>
+      </div>
+
+      {/* Music — top-right corner */}
+      <div className="absolute top-0 right-0 z-30 p-3 sm:p-4">
+        <MusicVolumeSlider />
+      </div>
+
+      {/* Salir — bottom-right corner, more visible */}
+      <div className="absolute bottom-0 right-0 z-30 p-3 sm:p-4">
+        <GameIconButton
+          icon={DoorOpen}
+          label="Salir"
+          tone="warning"
+          size="lg"
+          onClick={() => {
+            playSFX('back')
+            onRequestExit()
+          }}
+        />
       </div>
 
       {/* Dialogue */}
