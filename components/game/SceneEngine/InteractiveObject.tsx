@@ -20,7 +20,7 @@ interface InteractiveObjectProps {
   config: InteractiveObjectConfig
   unlocked: boolean
   completed: boolean
-  onClick: () => void
+  onClick: (e: React.MouseEvent) => void
   hoverStyle?: Partial<InteractiveHoverStyle>
 }
 
@@ -34,7 +34,7 @@ export function InteractiveObject({ config, unlocked, completed, onClick, hoverS
 
   return (
     <motion.button
-      onClick={onClick}
+      onClick={(e) => { e.stopPropagation(); onClick(e); }}
       className="absolute border-0 bg-transparent cursor-pointer transition-all duration-300"
       style={{
         left: `${config.area.x}%`,

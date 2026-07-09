@@ -55,6 +55,29 @@ function pickRandom(arr: string[]) {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
+function clampPosition(x: number, y: number, offsetX = 14, offsetY = -14): { x: number; y: number } {
+  const margin = 20
+  const estimatedW = 280
+  const estimatedH = 40
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+
+  let cx = x + offsetX
+  let cy = y + offsetY
+
+  if (cx + estimatedW > vw - margin) {
+    cx = x - estimatedW - Math.abs(offsetX)
+  }
+  if (cx < margin) cx = margin
+
+  if (cy + estimatedH > vh - margin) {
+    cy = vh - margin - estimatedH
+  }
+  if (cy < margin) cy = margin
+
+  return { x: cx, y: cy }
+}
+
 export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete }: SceneEngineProps) {
   const { playSFX, setMusicTrack } = useAudio()
   const { state, actions, helpers } = useSceneEngine(levelConfig)
@@ -63,13 +86,13 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
   const [feedback, setFeedback] = useState<{ text: string; key: number; x: number; y: number } | null>(null)
   const feedbackKeyRef = useRef(0)
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const mousePosRef = useRef({ x: 0, y: 0 })
 
   const showFeedback = useCallback((text: string, x?: number, y?: number) => {
     if (state.phase !== 'exploration') return
     if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current)
     const key = ++feedbackKeyRef.current
-    setFeedback({ text, key, x: x ?? mousePosRef.current.x, y: y ?? mousePosRef.current.y })
+    const pos = clampPosition(x ?? window.innerWidth / 2, y ?? window.innerHeight / 2)
+    setFeedback({ text, key, x: pos.x, y: pos.y })
     feedbackTimerRef.current = setTimeout(() => setFeedback(null), 2200)
   }, [state.phase])
 
@@ -112,7 +135,7 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
   }, [state.completedActivities, state.phase, actions, onLevelComplete])
 
   const handleObjectClick = useCallback(
-    (obj: { id: string }) => {
+    (obj: { id: string }, e: React.MouseEvent) => {
       const fullConfig = levelConfig.interactiveObjects.find((o) => o.id === obj.id)
       if (!fullConfig) return
 
@@ -121,12 +144,12 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
         if (next) {
           if (!helpers.isUnlocked(next)) {
             const blocker = helpers.findLockedByTitle(next)
-            showFeedback(`${pickRandom(DONE_NEXT_MESSAGES)} ${blocker}.`)
+            showFeedback(`${pickRandom(DONE_NEXT_MESSAGES)} ${blocker}.`, e.clientX, e.clientY)
           } else {
-            showFeedback(`${pickRandom(DONE_NEXT_MESSAGES)} ${next.title}.`)
+            showFeedback(`${pickRandom(DONE_NEXT_MESSAGES)} ${next.title}.`, e.clientX, e.clientY)
           }
         } else {
-          showFeedback(DONE_ALL_MESSAGE)
+          showFeedback(DONE_ALL_MESSAGE, e.clientX, e.clientY)
         }
         return
       }
@@ -134,7 +157,7 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
       if (!helpers.isUnlocked(fullConfig)) {
         const blocker = helpers.findLockedByTitle(fullConfig)
         if (blocker) {
-          showFeedback(`${pickRandom(LOCKED_MESSAGES)} ${blocker}.`)
+          showFeedback(`${pickRandom(LOCKED_MESSAGES)} ${blocker}.`, e.clientX, e.clientY)
         }
         return
       }
@@ -150,12 +173,7 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
   }, [showFeedback])
 
   return (
-    <div
-      className="fixed inset-0 overflow-hidden"
-      style={{ backgroundColor: '#050805' }}
-      onClick={handleBackgroundClick}
-      onMouseMove={(e) => { mousePosRef.current = { x: e.clientX, y: e.clientY } }}
-    >
+    <div className="fixed inset-0 overflow-hidden" style={{ backgroundColor: '#050805' }} onClick={handleBackgroundClick}>
       {/* Background */}
       <LevelBackground levelId={levelConfig.id} />
 
@@ -166,14 +184,14 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
       <ActivityBurst trigger={burstTrigger} />
 
       {/* Interactive objects */}
-      <div className="absolute inset-0" onClick={(e) => e.stopPropagation()}>
+      <div className="absolute inset-0">
         {levelConfig.interactiveObjects.map((obj) => (
           <InteractiveObject
             key={obj.id}
             config={obj}
             unlocked={state.phase === 'exploration' && helpers.isUnlocked(obj)}
             completed={state.completedObjects.has(obj.id)}
-            onClick={() => handleObjectClick({ id: obj.id })}
+            onClick={(e) => handleObjectClick({ id: obj.id }, e)}
           />
         ))}
       </div>
@@ -232,13 +250,13 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
         />
       </div>
 
-      {/* Feedback notification — appears near click position */}
+      {/* Feedback notification — near click position, clamped to stay on screen */}
       <AnimatePresence mode="wait">
         {feedback && (
           <motion.div
             key={feedback.key}
             className="fixed z-40 pointer-events-none"
-            style={{ left: feedback.x + 16, top: feedback.y - 12 }}
+            style={{ left: feedback.x, top: feedback.y }}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
