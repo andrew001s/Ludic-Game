@@ -16,12 +16,103 @@ import {
 } from 'narraleaf-react'
 import type { ChainedActions } from 'narraleaf-react'
 import type { DialogueLine } from '@/types/level'
-import { getSpeakerCharacter, getSpeakerImage, getSpeakerProfile } from '@/app/constants/dialogueSpeakers'
+import { getSpeakerCharacter, getSpeakerImage, getSpeakerProfile, getSpeakerSpriteSrc } from '@/app/constants/dialogueSpeakers'
 
 interface NarraLeafDialoguePlayerProps {
   id: string
   lines: DialogueLine[]
   onComplete: () => void
+}
+
+function useIsLandscapeMobile() {
+  const [isLandscapeMobile, setIsLandscapeMobile] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const mediaQuery = window.matchMedia('(orientation: landscape) and (max-width: 1200px)')
+    const update = () => setIsLandscapeMobile(mediaQuery.matches)
+
+    update()
+    mediaQuery.addEventListener('change', update)
+
+    return () => mediaQuery.removeEventListener('change', update)
+  }, [])
+
+  return isLandscapeMobile
+}
+
+function MobileLandscapeDialoguePlayer({ lines, onComplete }: { lines: DialogueLine[]; onComplete: () => void }) {
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  useEffect(() => {
+    setCurrentIndex(0)
+  }, [lines])
+
+  const currentLine = lines[currentIndex]
+  const profile = currentLine ? getSpeakerProfile(currentLine.speaker) : null
+  const spriteSrc = profile ? getSpeakerSpriteSrc(profile) : null
+
+  const handleAdvance = useCallback(() => {
+    if (!currentLine) {
+      onComplete()
+      return
+    }
+
+    if (currentIndex >= lines.length - 1) {
+      onComplete()
+      return
+    }
+
+    setCurrentIndex((index) => index + 1)
+  }, [currentIndex, currentLine, lines.length, onComplete])
+
+  if (!currentLine || !profile) return null
+
+  return (
+    <div className="fixed inset-0 z-40" onClick={handleAdvance}>
+      <div className="absolute top-24 left-3 right-3 flex gap-3">
+        <div className="flex w-3/5 items-end justify-center overflow-hidden pointer-events-none">
+          {spriteSrc ? (
+            <img
+              src={spriteSrc}
+              alt={profile.spriteAlt ?? profile.displayName}
+              className="max-h-full max-w-full object-contain object-bottom drop-shadow-[0_18px_24px_rgba(0,0,0,0.55)]"
+            />
+          ) : null}
+        </div>
+
+        <div className="w-2/5 -translate-x-24 pb-12">
+          <div
+            className="flex h-full cursor-pointer flex-col border-[3px] p-4"
+            style={{
+              borderColor: 'rgba(145, 149, 88, 0.55)',
+              backgroundColor: 'rgba(11, 13, 10, 0.96)',
+              boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255,255,255,0.03)',
+              backgroundImage:
+                'repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 6px), repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0 2px, transparent 2px 6px)',
+              fontFamily: '"Courier New", monospace',
+            }}
+          >
+            <div className="mb-3 flex items-center gap-2">
+              <div className="text-base font-bold tracking-widest uppercase" style={{ color: '#d8e28f' }}>
+                {profile.displayName}
+              </div>
+              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(183, 209, 103, 0.22), transparent)' }} />
+            </div>
+
+            <div className="narraleaf-dialog-text flex-1 text-lg leading-relaxed" style={{ color: '#dfe9ae' }}>
+              {currentLine.text}
+            </div>
+
+            <div className="mt-3 text-right text-sm tracking-wider animate-pulse" style={{ color: 'rgba(223, 233, 174, 0.45)' }}>
+              [CONTINUAR]
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function NarraLeafDialogueContent() {
@@ -148,7 +239,7 @@ function createDialogueStory(id: string, lines: DialogueLine[], onStoryComplete:
   return story
 }
 
-export function NarraLeafDialoguePlayer({ id, lines, onComplete }: NarraLeafDialoguePlayerProps) {
+function DesktopDialoguePlayer({ id, lines, onComplete }: NarraLeafDialoguePlayerProps) {
   const completedRef = useRef(false)
   const [story, setStory] = useState<Story | null>(null)
 
@@ -182,4 +273,14 @@ export function NarraLeafDialoguePlayer({ id, lines, onComplete }: NarraLeafDial
       </GameProviders>
     </div>
   )
+}
+
+export function NarraLeafDialoguePlayer({ id, lines, onComplete }: NarraLeafDialoguePlayerProps) {
+  const isLandscapeMobile = useIsLandscapeMobile()
+
+  if (isLandscapeMobile) {
+    return <MobileLandscapeDialoguePlayer lines={lines} onComplete={onComplete} />
+  }
+
+  return <DesktopDialoguePlayer id={id} lines={lines} onComplete={onComplete} />
 }

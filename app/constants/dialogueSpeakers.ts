@@ -10,6 +10,7 @@ export interface SpeakerProfile {
   displayName: string
   spriteAlt?: string
   spriteClassName?: string
+  spriteSrc?: string
   character?: NarraLeafCharacter
   image?: NarraLeafImage
 }
@@ -83,36 +84,42 @@ export const SPEAKER_PROFILES: Record<string, SpeakerProfile> = {
   KIRA: {
     displayName: 'Dr.Kira Newton',
     spriteAlt: 'Dr.Kira Newton',
+    spriteSrc: '/assets/sprites/kira.png',
     character: kiraCharacter,
     image: kiraImage,
   },
   LUMEN: {
     displayName: 'Dra. Lumen Solis',
     spriteAlt: 'Dra. Lumen Solis',
+    spriteSrc: '/assets/sprites/lumen.png',
     character: lumenCharacter,
     image: lumenImage,
   },
   VEGA: {
     displayName: 'Dr.Atlas Vega',
     spriteAlt: 'Dr.Atlas Vega',
+    spriteSrc: '/assets/sprites/atlas.png',
     character: atlasCharacter,
     image: atlasImage,
   },
   VOLT: {
     displayName: 'Dr. Volt Faraday',
     spriteAlt: 'Dr. Volt Faraday',
+    spriteSrc: '/assets/sprites/volt.png',
     character: voltCharacter,
     image: voltImage,
   },
   NOVA: {
     displayName: 'Dra. Nova Dalton',
     spriteAlt: 'Dra. Nova Dalton',
+    spriteSrc: '/assets/sprites/nova.png',
     character: novaCharacter,
     image: novaImage,
   },
   NEXUS: {
     displayName: 'NEXUS Ω',
     spriteAlt: 'NEXUS Ω',
+    spriteSrc: '/assets/sprites/nexus.png',
     character: nexusCharacter,
     image: nexusImage,
   },
@@ -133,6 +140,10 @@ export function getSpeakerImageSrc(profile: SpeakerProfile): string | null {
 
 export function getSpeakerImage(profile: SpeakerProfile): NarraLeafImage | null {
   return profile.image ?? null
+}
+
+export function getSpeakerSpriteSrc(profile: SpeakerProfile): string | null {
+  return profile.spriteSrc ?? getSpeakerImageSrc(profile)
 }
 
 export function getSpeakerCharacter(profile: SpeakerProfile): NarraLeafCharacter {
