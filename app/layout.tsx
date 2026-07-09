@@ -14,13 +14,42 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Guardianes: El Legado del Bosque",
+  title: "NEXUS Ω: Guardianes de la Conservación",
   description:
-    "Un videojuego educativo 2D. Explora un laboratorio abandonado invadido por la naturaleza y descubre los secretos del bosque.",
-  keywords: ["videojuego", "educativo", "2D", "pixel art", "bosque", "naturaleza"],
+    "NEXUS Ω: Guardianes de la Conservación es un videojuego educativo 2D de aventura y pixel art sobre naturaleza, ciencia y restauración ecológica.",
+  keywords: [
+    "NEXUS Ω",
+    "Guardianes de la Conservación",
+    "videojuego educativo",
+    "juego 2D",
+    "pixel art",
+    "naturaleza",
+    "ecología",
+    "conservación",
+    "aventura",
+  ],
+  applicationName: "NEXUS Ω: Guardianes de la Conservación",
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: "NEXUS Ω: Guardianes de la Conservación",
+    description:
+      "Explora una aventura 2D en pixel art centrada en la conservación, la ciencia y la restauración de la naturaleza.",
+    type: "website",
+    siteName: "NEXUS Ω: Guardianes de la Conservación",
+    locale: "es_ES",
+  },
+  twitter: {
+    card: "summary",
+    title: "NEXUS Ω: Guardianes de la Conservación",
+    description:
+      "Un videojuego educativo 2D sobre naturaleza, ciencia y restauración ecológica.",
+  },
   appleWebApp: {
     capable: true,
-    title: "Guardianes",
+    title: "NEXUS Ω",
     statusBarStyle: "black-translucent",
   },
 };
@@ -51,7 +80,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-[#050805] text-[#e2e8f0]">
         <div
-          className="rotate-device-overlay fixed inset-0 z-[9999] hidden flex-col items-center justify-center gap-4 bg-[#050805] p-6 text-center"
+          className="rotate-device-overlay fixed inset-0 z-9999 hidden flex-col items-center justify-center gap-4 bg-[#050805] p-6 text-center"
           style={{ fontFamily: '"Courier New", monospace' }}
         >
           <div className="text-5xl mb-2">↻</div>

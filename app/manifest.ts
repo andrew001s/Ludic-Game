@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Guardianes: El Legado del Bosque',
-    short_name: 'Guardianes',
-    description: 'Un videojuego educativo 2D. Explora un laboratorio abandonado invadido por la naturaleza y descubre los secretos del bosque.',
+    name: 'NEXUS Ω: Guardianes de la Conservación',
+    short_name: 'NEXUS Ω',
+    description: 'NEXUS Ω: Guardianes de la Conservación es un videojuego educativo 2D de aventura y pixel art sobre naturaleza, ciencia y restauración ecológica.',
     start_url: '/',
     display: 'standalone',
     background_color: '#050805',
