@@ -34,9 +34,8 @@ export function InteractiveObject({ config, unlocked, completed, onClick, hoverS
 
   return (
     <motion.button
-      onClick={interactive ? onClick : undefined}
-      disabled={!interactive}
-      className={`absolute border-0 bg-transparent transition-all duration-300 ${interactive ? 'cursor-pointer' : 'cursor-default'}`}
+      onClick={onClick}
+      className="absolute border-0 bg-transparent cursor-pointer transition-all duration-300"
       style={{
         left: `${config.area.x}%`,
         top: `${config.area.y}%`,
@@ -119,7 +118,7 @@ export function InteractiveObject({ config, unlocked, completed, onClick, hoverS
 
           <div
             className="absolute inset-0 pointer-events-none"
-            
+
           />
         </div>
       </div>

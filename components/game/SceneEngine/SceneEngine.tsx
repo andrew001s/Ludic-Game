@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { DoorOpen, Trophy } from 'lucide-react'
 import type { LevelConfig } from '@/types/level'
 import type { EnginePhase } from '@/hooks/useSceneEngine'
@@ -25,11 +25,53 @@ interface SceneEngineProps {
   onLevelComplete: (completedActivities: ActivityCompletionMetrics[]) => void
 }
 
+const EMPTY_CLICK_MESSAGES = [
+  'No hay nada que hacer aquí...',
+  'Esto no me sirve.',
+  'Tengo que seguir buscando.',
+  'Aquí no hay nada útil.',
+  'No encuentro lo que necesito.',
+  'Mejor busco en otro lado.',
+  'Esto no ayuda en nada.',
+]
+
+const LOCKED_MESSAGES = [
+  'Primero tengo que completar:',
+  'Aún no está listo. Necesito hacer',
+  'No puedo aún. Debo completar',
+  'Esto no funciona sin',
+]
+
+const DONE_NEXT_MESSAGES = [
+  'Esto ya lo hice. Ahora necesito:',
+  'Perfecto, esto ya funciona. Necesito realizar',
+  'Ya completé esto. Ahora tengo que',
+  'Esto está listo. Siguiente:',
+]
+
+const DONE_ALL_MESSAGE = '¡Todo está completado! Buen trabajo.'
+
+function pickRandom(arr: string[]) {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
 export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete }: SceneEngineProps) {
   const { playSFX, setMusicTrack } = useAudio()
   const { state, actions, helpers } = useSceneEngine(levelConfig)
   const prevPhaseRef = useRef<EnginePhase>(state.phase)
   const [burstTrigger, setBurstTrigger] = useState<'enter' | 'complete' | null>(null)
+  const [feedback, setFeedback] = useState<{ text: string; key: number; x: number; y: number } | null>(null)
+  const feedbackKeyRef = useRef(0)
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mousePosRef = useRef({ x: 0, y: 0 })
+
+  const showFeedback = useCallback((text: string, x?: number, y?: number) => {
+    if (state.phase !== 'exploration') return
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current)
+    const key = ++feedbackKeyRef.current
+    setFeedback({ text, key, x: x ?? mousePosRef.current.x, y: y ?? mousePosRef.current.y })
+    feedbackTimerRef.current = setTimeout(() => setFeedback(null), 2200)
+  }, [state.phase])
 
   useEffect(() => {
     if (isMusicTrack(levelConfig.id)) {
@@ -73,15 +115,47 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
     (obj: { id: string }) => {
       const fullConfig = levelConfig.interactiveObjects.find((o) => o.id === obj.id)
       if (!fullConfig) return
-      if (!helpers.isUnlocked(fullConfig)) return
+
+      if (state.completedObjects.has(fullConfig.id)) {
+        const next = levelConfig.interactiveObjects.find((o) => !state.completedObjects.has(o.id))
+        if (next) {
+          if (!helpers.isUnlocked(next)) {
+            const blocker = helpers.findLockedByTitle(next)
+            showFeedback(`${pickRandom(DONE_NEXT_MESSAGES)} ${blocker}.`)
+          } else {
+            showFeedback(`${pickRandom(DONE_NEXT_MESSAGES)} ${next.title}.`)
+          }
+        } else {
+          showFeedback(DONE_ALL_MESSAGE)
+        }
+        return
+      }
+
+      if (!helpers.isUnlocked(fullConfig)) {
+        const blocker = helpers.findLockedByTitle(fullConfig)
+        if (blocker) {
+          showFeedback(`${pickRandom(LOCKED_MESSAGES)} ${blocker}.`)
+        }
+        return
+      }
+
       playSFX('click')
       actions.interactWithObject(fullConfig)
     },
-    [levelConfig.interactiveObjects, helpers, actions, playSFX],
+    [levelConfig, state.completedObjects, helpers, actions, playSFX, showFeedback],
   )
 
+  const handleBackgroundClick = useCallback((e: React.MouseEvent) => {
+    showFeedback(pickRandom(EMPTY_CLICK_MESSAGES), e.clientX, e.clientY)
+  }, [showFeedback])
+
   return (
-    <div className="fixed inset-0 overflow-hidden" style={{ backgroundColor: '#050805' }}>
+    <div
+      className="fixed inset-0 overflow-hidden"
+      style={{ backgroundColor: '#050805' }}
+      onClick={handleBackgroundClick}
+      onMouseMove={(e) => { mousePosRef.current = { x: e.clientX, y: e.clientY } }}
+    >
       {/* Background */}
       <LevelBackground levelId={levelConfig.id} />
 
@@ -92,7 +166,7 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
       <ActivityBurst trigger={burstTrigger} />
 
       {/* Interactive objects */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0" onClick={(e) => e.stopPropagation()}>
         {levelConfig.interactiveObjects.map((obj) => (
           <InteractiveObject
             key={obj.id}
@@ -105,24 +179,24 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
       </div>
 
       {/* Score — top-left corner */}
-      <div className="absolute top-0 left-0 z-30 p-3 sm:p-4">
-         <div
-            className="inline-flex items-center gap-2 border px-3 py-2 text-[10px] uppercase tracking-[0.18em]"
-            style={{
-              borderColor: 'rgba(250, 204, 21, 0.34)',
-              color: '#fef08a',
-              backgroundColor: 'rgba(35, 22, 4, 0.52)',
-              fontFamily: '"Courier New", monospace',
-              textShadow: '1px 1px 0 #050603',
-            }}
-          >
-            <Trophy size={14} aria-hidden="true" />
-            <span>Score: {score.toLocaleString()}</span>
-          </div>
-        
+      <div className="absolute top-0 left-0 z-30 p-3 sm:p-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="inline-flex items-center gap-2 border px-3 py-2 text-[10px] uppercase tracking-[0.18em]"
+          style={{
+            borderColor: 'rgba(250, 204, 21, 0.34)',
+            color: '#fef08a',
+            backgroundColor: 'rgba(35, 22, 4, 0.52)',
+            fontFamily: '"Courier New", monospace',
+            textShadow: '1px 1px 0 #050603',
+          }}
+        >
+          <Trophy size={14} aria-hidden="true" />
+          <span>Score: {score.toLocaleString()}</span>
+        </div>
       </div>
 
-      <div className="absolute top-0 left-1/2 z-30 p-3 sm:p-4 -translate-x-1/2">
+      {/* Level title — top-center */}
+      <div className="absolute top-0 left-1/2 z-30 p-3 sm:p-4 -translate-x-1/2" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 sm:gap-4">
           <span
             className="text-[18px] tracking-[0.25em] uppercase"
@@ -136,17 +210,16 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
           >
             {levelConfig.title}
           </span>
-         
         </div>
       </div>
 
       {/* Music — top-right corner */}
-      <div className="absolute top-0 right-0 z-30 p-3 sm:p-4">
+      <div className="absolute top-0 right-0 z-30 p-3 sm:p-4" onClick={(e) => e.stopPropagation()}>
         <MusicVolumeSlider />
       </div>
 
       {/* Salir — bottom-right corner, more visible */}
-      <div className="absolute bottom-0 right-0 z-30 p-3 sm:p-4">
+      <div className="absolute bottom-0 right-0 z-30 p-3 sm:p-4" onClick={(e) => e.stopPropagation()}>
         <GameIconButton
           icon={DoorOpen}
           label="Salir"
@@ -158,6 +231,35 @@ export function SceneEngine({ levelConfig, score, onRequestExit, onLevelComplete
           }}
         />
       </div>
+
+      {/* Feedback notification — appears near click position */}
+      <AnimatePresence mode="wait">
+        {feedback && (
+          <motion.div
+            key={feedback.key}
+            className="fixed z-40 pointer-events-none"
+            style={{ left: feedback.x + 16, top: feedback.y - 12 }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+          >
+            <div
+              className="px-4 py-2 border text-[11px] uppercase tracking-[0.2em] whitespace-nowrap"
+              style={{
+                borderColor: 'rgba(250, 204, 21, 0.4)',
+                color: '#fef08a',
+                backgroundColor: 'rgba(35, 22, 4, 0.92)',
+                fontFamily: '"Courier New", monospace',
+                textShadow: '1px 1px 0 #050603',
+                boxShadow: '0 0 24px rgba(250, 204, 21, 0.18)',
+              }}
+            >
+              {feedback.text}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Dialogue */}
       <AnimatePresence>
