@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Bot, Cog, Gauge, Lightbulb, Sparkles, Triangle, Zap } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -79,6 +79,8 @@ export function RobotPathActivity({ activity, onComplete }: ActivityComponentPro
   const [rotations, setRotations] = useState<number[]>(() => ac.nodes?.map((node) => node.initialRotation) ?? [])
   const [followUpSelected, setFollowUpSelected] = useState<number[]>([])
   const [followUpAnswered, setFollowUpAnswered] = useState(false)
+  const [selectedTouchItem, setSelectedTouchItem] = useState<number | null>(null)
+  const [isTouchDevice] = useState(() => 'ontouchstart' in window || navigator.maxTouchPoints > 0)
   const dragIndexRef = useRef<number | null>(null)
   const { buildCompletion, registerInteraction, registerMistake, registerRetry } = useActivityMetrics(ac)
   const nodes = useMemo(() => ac.nodes ?? [], [ac.nodes])
@@ -167,7 +169,31 @@ export function RobotPathActivity({ activity, onComplete }: ActivityComponentPro
   }
 
   const handleSlotClick = (slotIndex: number) => {
-    if (answered || slots[slotIndex] === null || isMagneticCircuitMode) return
+    if (answered || isMagneticCircuitMode) return
+
+    if (isTouchDevice && selectedTouchItem !== null) {
+      if (slots[slotIndex] !== null) return
+      if (selectedTouchItem === ac.correctOrder[slotIndex]) {
+        const next = [...slots]
+        next[slotIndex] = selectedTouchItem
+        setSlots(next)
+        setSelectedTouchItem(null)
+      } else {
+        registerMistake()
+        setShakeSlots((prev) => new Set(prev).add(slotIndex))
+        setSelectedTouchItem(null)
+        setTimeout(() => {
+          setShakeSlots((prev) => {
+            const next = new Set(prev)
+            next.delete(slotIndex)
+            return next
+          })
+        }, 500)
+      }
+      return
+    }
+
+    if (slots[slotIndex] === null) return
     registerInteraction()
     const next = [...slots]
     next[slotIndex] = null
@@ -222,6 +248,7 @@ export function RobotPathActivity({ activity, onComplete }: ActivityComponentPro
     setRotations(ac.nodes?.map((node) => node.initialRotation) ?? [])
     setFollowUpSelected([])
     setFollowUpAnswered(false)
+    setSelectedTouchItem(null)
     setAnswered(false)
   }
 
@@ -643,22 +670,39 @@ export function RobotPathActivity({ activity, onComplete }: ActivityComponentPro
               {availableItems.map((itemIndex) => {
                 const item = ac.items[itemIndex]
                 const ItemIcon = getStepIcon(item)
+                const isSelected = isTouchDevice && selectedTouchItem === itemIndex
 
                 return (
                   <div
                     key={itemIndex}
                     draggable={!answered}
                     onDragStart={(e) => handleDragStart(e, itemIndex)}
-                    className="flex cursor-grab select-none items-center gap-2 rounded-sm border px-3 py-2 text-xs transition-all hover:scale-[1.03] active:scale-95"
+                    onClick={isTouchDevice ? () => {
+                      if (answered) return
+                      registerInteraction()
+                      if (isSelected) {
+                        setSelectedTouchItem(null)
+                      } else {
+                        setSelectedTouchItem(itemIndex)
+                      }
+                    } : undefined}
+                    className={`flex select-none items-center gap-2 rounded-sm border px-3 py-2 text-xs transition-all hover:scale-[1.03] active:scale-95 ${
+                      isTouchDevice ? 'cursor-pointer' : 'cursor-grab'
+                    }`}
                     style={{
-                      borderColor: getStepBorder(itemIndex),
-                      color: 'rgba(134, 239, 172, 0.7)',
-                      backgroundColor: 'rgba(74, 222, 128, 0.04)',
+                      borderColor: isSelected ? 'rgba(250, 204, 21, 0.7)' : getStepBorder(itemIndex),
+                      color: isSelected ? '#fef08a' : 'rgba(134, 239, 172, 0.7)',
+                      backgroundColor: isSelected ? 'rgba(250, 204, 21, 0.12)' : 'rgba(74, 222, 128, 0.04)',
                       transition: 'transform 0.1s, border-color 0.15s',
                     }}
                   >
                     <ItemIcon size={14} aria-hidden="true" />
                     {item}
+                    {isSelected && (
+                      <span className="ml-auto text-[9px] uppercase tracking-wider" style={{ color: 'rgba(250, 204, 21, 0.7)' }}>
+                        Toca un slot
+                      </span>
+                    )}
                   </div>
                 )
               })}

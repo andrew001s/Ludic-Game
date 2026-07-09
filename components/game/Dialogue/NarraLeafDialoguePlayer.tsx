@@ -71,7 +71,7 @@ function createDialogueUI() {
   return function NarraLeafDialogueUI() {
     return (
       <Dialog
-        className="absolute bottom-0 left-0 right-0 z-20 p-4 sm:p-6"
+        className="absolute bottom-0 left-0 right-0 z-20 p-3 sm:p-6 max-h-[45vh] sm:max-h-[50vh] overflow-y-auto"
         style={{ fontFamily: '"Courier New", monospace' }}
       >
         <NarraLeafDialogueContent />
