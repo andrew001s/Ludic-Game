@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Play, Save, Trophy } from 'lucide-react'
@@ -25,7 +25,13 @@ export function MainMenu() {
   const { hasSave, save, saveGame } = useGameSave()
   const [flow, setFlow] = useState<'menu' | 'name' | 'story'>('menu')
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false)
-  const { playSFX, initAudio } = useAudio()
+  const { playSFX, setMusicTrack } = useAudio()
+
+  useEffect(() => {
+    if (flow === 'menu' || flow === 'name') {
+      setMusicTrack('menu')
+    }
+  }, [flow, setMusicTrack])
 
   const leaderboard = useLeaderboard()
 

@@ -15,7 +15,7 @@ export function StoryPlayer({ onFinish }: StoryPlayerProps) {
   const [textComplete, setTextComplete] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [fadeOut, setFadeOut] = useState(false)
-  const { playSFX } = useAudio()
+  const { playSFX, setMusicTrack } = useAudio()
 
   const isLastScene = currentScene === STORY_SCENES.length - 1
 
@@ -39,6 +39,10 @@ export function StoryPlayer({ onFinish }: StoryPlayerProps) {
     setIsTransitioning(true)
     setTimeout(advanceScene, 400)
   }, [isTransitioning, isLastScene, onFinish, playSFX, advanceScene])
+
+  useEffect(() => {
+    setMusicTrack('intro')
+  }, [setMusicTrack])
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {

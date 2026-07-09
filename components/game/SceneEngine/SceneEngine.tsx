@@ -5,7 +5,7 @@ import { AnimatePresence } from 'framer-motion'
 import type { LevelConfig } from '@/types/level'
 import type { EnginePhase } from '@/hooks/useSceneEngine'
 import { useSceneEngine } from '@/hooks/useSceneEngine'
-import { useAudio } from '@/hooks/useAudio'
+import { isMusicTrack, useAudio } from '@/hooks/useAudio'
 import { InteractiveObject } from './InteractiveObject'
 import { LevelBackground } from './LevelBackground'
 import { LevelParticles } from './LevelParticles'
@@ -20,22 +20,39 @@ interface SceneEngineProps {
 }
 
 export function SceneEngine({ levelConfig, onLevelComplete }: SceneEngineProps) {
-  const { playSFX } = useAudio()
+  const { playSFX, setMusicTrack } = useAudio()
   const { state, actions, helpers } = useSceneEngine(levelConfig)
   const prevPhaseRef = useRef<EnginePhase>(state.phase)
   const [burstTrigger, setBurstTrigger] = useState<'enter' | 'complete' | null>(null)
 
   useEffect(() => {
+    if (isMusicTrack(levelConfig.id)) {
+      setMusicTrack(levelConfig.id)
+    }
+  }, [levelConfig.id, setMusicTrack])
+
+  useEffect(() => {
     const prev = prevPhaseRef.current
     const curr = state.phase
+    let nextTrigger: 'enter' | 'complete' | null = null
+
     if (prev !== curr) {
       if (curr === 'activity') {
-        setBurstTrigger('enter')
+        nextTrigger = 'enter'
       } else if (prev === 'activity' && (curr === 'exploration' || curr === 'completion')) {
-        setBurstTrigger('complete')
+        nextTrigger = 'complete'
       }
-      prevPhaseRef.current = curr
     }
+
+    prevPhaseRef.current = state.phase
+
+    if (!nextTrigger) return
+
+    const timer = window.setTimeout(() => {
+      setBurstTrigger(nextTrigger)
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [state.phase])
 
   const handleDialogueComplete = useCallback(() => {
