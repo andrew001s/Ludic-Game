@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { isAndroid, isMobile, MobileView } from 'react-device-detect'
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>
@@ -15,11 +16,6 @@ function isIosStandalone() {
 function isStandaloneDisplayMode() {
   if (typeof window === 'undefined') return false
   return window.matchMedia('(display-mode: standalone)').matches || isIosStandalone()
-}
-
-function isAndroidDevice() {
-  if (typeof window === 'undefined') return false
-  return /Android/i.test(window.navigator.userAgent)
 }
 
 export function AppShellHints() {
@@ -63,8 +59,18 @@ export function AppShellHints() {
     }
   }, [])
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+
+    document.body.dataset.mobileDevice = isMobile ? 'true' : 'false'
+
+    return () => {
+      delete document.body.dataset.mobileDevice
+    }
+  }, [])
+
   const showInstallHint = useMemo(
-    () => isAndroidDevice() && !isStandalone,
+    () => isAndroid && !isStandalone,
     [isStandalone],
   )
 
@@ -120,18 +126,20 @@ export function AppShellHints() {
         </div>
       )}
 
-      <div
-        className={`rotate-device-overlay fixed inset-0 z-[9999] ${isStandalone && isPortrait ? 'flex' : 'hidden'} flex-col items-center justify-center gap-4 bg-[#050805] p-6 text-center`}
-        style={{ fontFamily: '"Courier New", monospace' }}
-      >
-        <div className="mb-2 text-5xl">↻</div>
-        <div className="text-sm uppercase tracking-[0.3em]" style={{ color: '#4ade80' }}>
-          Gira el dispositivo
+      <MobileView>
+        <div
+          className={`rotate-device-overlay fixed inset-0 z-[9999] ${isStandalone && isPortrait ? 'flex' : 'hidden'} flex-col items-center justify-center gap-4 bg-[#050805] p-6 text-center`}
+          style={{ fontFamily: '"Courier New", monospace' }}
+        >
+          <div className="mb-2 text-5xl">↻</div>
+          <div className="text-sm uppercase tracking-[0.3em]" style={{ color: '#4ade80' }}>
+            Gira el dispositivo
+          </div>
+          <div className="max-w-xs text-[10px] tracking-wider" style={{ color: 'rgba(74, 222, 128, 0.5)' }}>
+            Usa la app en modo horizontal para una mejor experiencia
+          </div>
         </div>
-        <div className="max-w-xs text-[10px] tracking-wider" style={{ color: 'rgba(74, 222, 128, 0.5)' }}>
-          Usa la app en modo horizontal para una mejor experiencia
-        </div>
-      </div>
+      </MobileView>
     </>
   )
 }

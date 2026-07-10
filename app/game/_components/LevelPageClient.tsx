@@ -13,6 +13,7 @@ import { calculateActivityPerformance, summarizeLevelScore } from '@/lib/scoring
 import { syncPlayerLevelProgress } from '@/services/progress.service'
 import type { ActivityCompletionMetrics, LevelScoreSummary } from '@/types/progress'
 import { Modal } from '@/components/ui/Modal'
+import { useAchievements } from '@/components/game/Achievements/AchievementProvider'
 
 type OutroTone = {
   accent: string
@@ -77,6 +78,7 @@ interface LevelPageClientProps {
 export function LevelPageClient({ levelId }: LevelPageClientProps) {
   const router = useRouter()
   const { save, saveGame } = useGameSave()
+  const { evaluateLevelAchievements } = useAchievements()
   const [isBooting, setIsBooting] = useState(true)
   const [showOutro, setShowOutro] = useState(false)
   const [isLeaving, setIsLeaving] = useState(false)
@@ -192,6 +194,13 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
       lastSavedAt: Date.now(),
     })
 
+    evaluateLevelAchievements({
+      levelId: levelConfig.id,
+      summary,
+      completedActivities,
+      previous: previousProgress,
+    })
+
     setLevelSummary(summary)
     setShowOutro(true)
     setSyncError(null)
@@ -206,7 +215,7 @@ export function LevelPageClient({ levelId }: LevelPageClientProps) {
       const message = error instanceof Error ? error.message : 'No se pudo sincronizar el progreso con Firebase.'
       setSyncError(message)
     }
-  }, [levelConfig, save, saveGame])
+  }, [evaluateLevelAchievements, levelConfig, save, saveGame])
 
   if (!levelConfig || !outroTone) {
     return (

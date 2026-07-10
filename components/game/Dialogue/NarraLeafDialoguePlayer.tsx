@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { isMobile } from 'react-device-detect'
 import {
   Dialog,
   GameProviders,
@@ -30,8 +31,8 @@ function useIsLandscapeMobile() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const mediaQuery = window.matchMedia('(orientation: landscape) and (max-width: 1200px)')
-    const update = () => setIsLandscapeMobile(mediaQuery.matches)
+    const mediaQuery = window.matchMedia('(orientation: landscape)')
+    const update = () => setIsLandscapeMobile(isMobile && mediaQuery.matches)
 
     update()
     mediaQuery.addEventListener('change', update)

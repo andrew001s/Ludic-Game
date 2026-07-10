@@ -212,60 +212,53 @@ body {
   }
 }
 
-/* ── Landscape-lock for mobile portrait ── */
-@media (orientation: portrait) and (pointer: coarse) and (max-width: 768px) {
-  .rotate-device-overlay {
-    display: flex !important;
-  }
-}
-
 /* ── Responsive: compact UI on short viewports (landscape mobile) ── */
 @media (max-height: 700px) {
-  .dialog-compact {
+  body[data-mobile-device='true'] .dialog-compact {
     min-height: 80px !important;
     max-height: 30dvh !important;
     overflow-y: auto !important;
   }
-  .dialog-compact .dialog-text {
+  body[data-mobile-device='true'] .dialog-compact .dialog-text {
     font-size: 0.7rem !important;
     line-height: 1.2 !important;
     min-height: 1.5em !important;
   }
-  .dialog-compact .dialog-continue {
+  body[data-mobile-device='true'] .dialog-compact .dialog-continue {
     font-size: 0.55rem !important;
     margin-top: 0.05rem !important;
   }
-  .__narraleaf_content-player img[src*="/assets/sprites/"] {
+  body[data-mobile-device='true'] .__narraleaf_content-player img[src*="/assets/sprites/"] {
     max-height: 35dvh !important;
     width: auto !important;
     filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5)) !important;
   }
-  .activity-compact {
+  body[data-mobile-device='true'] .activity-compact {
     gap: 0.35rem !important;
   }
-  .activity-compact .activity-instruction {
+  body[data-mobile-device='true'] .activity-compact .activity-instruction {
     font-size: 0.6rem !important;
   }
-  .activity-compact .activity-text {
+  body[data-mobile-device='true'] .activity-compact .activity-text {
     font-size: 0.7rem !important;
   }
-  .activity-compact .activity-grid-3 {
+  body[data-mobile-device='true'] .activity-compact .activity-grid-3 {
     gap: 0.2rem !important;
   }
-  .activity-compact .btn-compact {
+  body[data-mobile-device='true'] .activity-compact .btn-compact {
     padding: 0.2rem 0.5rem !important;
     font-size: 0.55rem !important;
   }
-  .modal-compact .modal-header {
+  body[data-mobile-device='true'] .modal-compact .modal-header {
     padding: 0.25rem 0.5rem !important;
   }
-  .modal-compact .modal-body {
+  body[data-mobile-device='true'] .modal-compact .modal-body {
     padding: 0.4rem !important;
   }
-  .sim-animation {
+  body[data-mobile-device='true'] .sim-animation {
     height: 3rem !important;
   }
-  .sim-metrics-label {
+  body[data-mobile-device='true'] .sim-metrics-label {
     font-size: 0.5rem !important;
   }
 }

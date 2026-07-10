@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "./ServiceWorkerRegister";
 import { AppShellHints } from "./AppShellHints";
+import { AchievementProvider } from "@/components/game/Achievements/AchievementProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -80,9 +81,11 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-full flex flex-col bg-[#050805] text-[#e2e8f0]">
-        <AppShellHints />
-        {children}
-        <ServiceWorkerRegister />
+        <AchievementProvider>
+          <AppShellHints />
+          {children}
+          <ServiceWorkerRegister />
+        </AchievementProvider>
       </body>
     </html>
   );
