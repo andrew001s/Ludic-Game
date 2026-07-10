@@ -11,8 +11,7 @@ export function Footer() {
       transition={{ duration: 1.5, delay: 1.2 }}
       style={{ fontFamily: '"Courier New", monospace', imageRendering: 'pixelated' }}
     >
-      <span>&copy; 2026 Guardianes Studios</span>
-      <span>v0.1.0</span>
+
     </motion.footer>
   )
 }
