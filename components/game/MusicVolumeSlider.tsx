@@ -15,6 +15,10 @@ export function MusicVolumeSlider() {
   const { musicVolume, setMusicVolume } = useAudio()
   const fillPercent = Math.round(musicVolume * 100)
 
+  const handleVolumeChange = (value: string) => {
+    setMusicVolume(Number(value) / 100)
+  }
+
   const Icon = useMemo(() => {
     if (musicVolume <= 0) return VolumeX
     if (musicVolume < 0.35) return Volume1
@@ -46,7 +50,8 @@ export function MusicVolumeSlider() {
           max={100}
           step={1}
           value={fillPercent}
-          onChange={(event) => setMusicVolume(Number(event.target.value) / 100)}
+          onChange={(event) => handleVolumeChange(event.target.value)}
+          onInput={(event) => handleVolumeChange((event.target as HTMLInputElement).value)}
           aria-label="Volumen de la música"
           className="music-volume-slider h-2 w-full cursor-pointer appearance-none rounded-full"
           style={{

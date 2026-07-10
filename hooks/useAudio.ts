@@ -33,6 +33,8 @@ const DEFAULT_MUSIC_VOLUME = 0.4
 // Module-level singletons — shared across all hook instances
 let ctx: AudioContext | null = null
 let music: HTMLAudioElement | null = null
+let musicSource: MediaElementAudioSourceNode | null = null
+let musicGain: GainNode | null = null
 let isPlaying = false
 let instanceCount = 0
 let retryListenerAttached = false
@@ -43,6 +45,16 @@ const volumeListeners = new Set<(volume: number) => void>()
 function notifyVolumeListeners() {
   for (const listener of volumeListeners) {
     listener(currentMusicVolume)
+  }
+}
+
+function applyMusicVolume() {
+  if (musicGain && ctx) {
+    musicGain.gain.setValueAtTime(currentMusicVolume, ctx.currentTime)
+  }
+
+  if (music) {
+    music.volume = currentMusicVolume
   }
 }
 
@@ -103,8 +115,23 @@ export function useAudio() {
     if (!music) {
       music = new Audio(MUSIC_TRACKS[track])
       music.loop = true
-      music.volume = currentMusicVolume
+      music.preload = 'auto'
+      music.setAttribute('playsinline', 'true')
     }
+
+    if (!musicGain) {
+      const c = getCtx()
+      musicGain = c.createGain()
+      musicGain.connect(c.destination)
+    }
+
+    if (music && !musicSource) {
+      const c = getCtx()
+      musicSource = c.createMediaElementSource(music)
+      musicSource.connect(musicGain)
+    }
+
+    applyMusicVolume()
     return music
   }, [])
 
@@ -121,7 +148,7 @@ export function useAudio() {
 
     if (isPlaying) return
     isPlaying = true
-    player.volume = currentMusicVolume
+    applyMusicVolume()
     player.currentTime = 0
     player.play().catch(() => {
       isPlaying = false
@@ -149,6 +176,7 @@ export function useAudio() {
         isPlaying = false
       }
 
+      applyMusicVolume()
       startMusic(track)
     },
     [ensureMusic, startMusic],
@@ -204,9 +232,12 @@ export function useAudio() {
         retryListenerAttached = true
         const retry = () => {
           if (ctx?.state === 'suspended') ctx.resume()
+          applyMusicVolume()
           startMusic()
         }
         window.addEventListener('click', retry, { once: true })
+        window.addEventListener('touchstart', retry, { once: true })
+        window.addEventListener('pointerdown', retry, { once: true })
         window.addEventListener('keydown', retry, { once: true })
       }
     }
@@ -233,8 +264,8 @@ export function useAudio() {
   const setMusicVolume = useCallback(
     (nextVolume: number) => {
       currentMusicVolume = Math.max(0, Math.min(1, nextVolume))
-      const player = ensureMusic(currentTrack)
-      player.volume = currentMusicVolume
+      ensureMusic(currentTrack)
+      applyMusicVolume()
       persistMusicVolume()
       notifyVolumeListeners()
     },

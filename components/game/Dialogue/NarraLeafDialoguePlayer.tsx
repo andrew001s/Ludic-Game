@@ -82,9 +82,9 @@ function MobileLandscapeDialoguePlayer({ lines, onComplete }: { lines: DialogueL
           ) : null}
         </div>
 
-        <div className="w-2/5 -translate-x-24 pb-12">
+        <div className="w-2/5 translate-y-10 -translate-x-24 pb-12">
           <div
-            className="flex h-full cursor-pointer flex-col border-[3px] p-4"
+            className="flex h-fit cursor-pointer flex-col border-[3px] p-4"
             style={{
               borderColor: 'rgba(145, 149, 88, 0.55)',
               backgroundColor: 'rgba(11, 13, 10, 0.96)',
